@@ -1,0 +1,38 @@
+@import './../../variables.less';
+
+.navContainer{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: @navWidth;
+  height: @navHeight;
+  padding: 0;
+  border: none !important;
+  font-size: 18px;
+  background-color: @navBgColor;
+
+  :global(.ant-menu){
+    border-right: none !important;
+    background-color: inherit;
+
+    :global(.ant-menu-item){
+      height: 45px;
+      line-height: 45px;
+      padding-left: 20px;
+      color: #f3f3f3;
+
+      &:hover{
+        color: #e1e4e6;
+      }
+
+      >i{
+        margin-right: 10px;
+      }
+    }
+
+    :global(.ant-menu-item-selected){
+      color: #00b4cf;
+      background-color: #435466;
+    }
+  }
+}

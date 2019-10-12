@@ -1,0 +1,6 @@
+node_modules/*
+res/data/*
+res/img/tiles/*
+*.DS_Store
+.idea/*
+diff.log

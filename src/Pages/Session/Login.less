@@ -1,0 +1,88 @@
+@import "../../variables.less";
+
+@btnInputHeight: 31px;
+@fontSize: 16px;
+
+.container {
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  background: url("/img/login-bg.1364446.jpg");
+  background-position-y: bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.loginBlock {
+  position: relative;
+  top: 20%;
+  width: 450px;
+  float: right;
+  margin-right: 75px;
+  border-radius: 4px;
+  padding: 16px;
+  background: -webkit-gradient(linear, left top, right top, from(#304156), to(#000));
+  opacity: 0.8;
+  color: #fff;
+  header {
+    font-size: 20px;
+    margin-bottom: 10px;
+    &:extend(.clearfloat all);
+    p {
+      float: left;
+    }
+  }
+}
+
+.inputContainer{
+  margin: 14px 0;
+  padding: 0 64px;
+  font-size: @fontSize;
+  .inputTitle{
+    &:extend(.clearfloat all);
+    p{
+      float: left;
+    }
+  }
+  .inputSection{
+    width: 100%;
+    input{
+      width: 100%;
+      height: @btnInputHeight;
+      border-radius: 3px;
+      border: 1px solid #a6a6a6;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(0,0,0,0.07) inset;
+      outline: 0;
+    }
+  }
+}
+
+.buttonContainer{
+  margin: 14px 0;
+  padding: 0 64px;
+  font-size: @fontSize;
+  color: #333333;
+  :hover {
+    cursor: pointer;
+  }
+  button {
+    display: inline-block;
+    border: 1px rgb(132, 106, 41) solid;
+    border-radius: 3px;
+    width: 100%;
+    height: @btnInputHeight;
+    outline: 0;
+    box-shadow: 0 1px 0 rgba(255,255,255,.4) inset;
+    margin: 16px 0;
+  }
+  .loginBtn {
+    background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+  }
+  .confirmBtn {
+    background: linear-gradient(to top, rgb(19, 215, 31), rgb(99, 215, 31));
+  }
+  .registerBtn{
+    margin-top: 4px;
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
+  }
+}
