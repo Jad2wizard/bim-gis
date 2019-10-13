@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cross-env NODE_ENV=production node app.js",
     "dev": "webpack --mode development",
-    "prod": "webpack --mode production && npm run dllProd",
+    "prod": "npm run dllProd && webpack --mode production",
     "dllProd": "webpack --config webpack.config.dll.js --mode production",
     "dll": "webpack --config webpack.config.dll.js --mode development",
     "eslint": "git diff --name-status --cached head > diff.log && node scripts/precommit.js"
@@ -29,6 +30,7 @@
     "babel-plugin-transform-class-properties": "^6.24.1",
     "core-js": "2.6.5",
     "css-loader": "^2.1.1",
+    "element-resize-event": "^3.0.3",
     "eslint": "^5.16.0",
     "eslint-plugin-react": "^7.12.4",
     "eslint-plugin-react-hooks": "^1.6.0",
@@ -63,7 +65,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.0",
-    "cross-env": "^5.2.0",
+    "cross-env": "^5.2.1",
     "event-emitter": "^0.3.5",
     "jadwizard-lib": "^1.0.0",
     "koa": "^2.0.0",

@@ -7,6 +7,8 @@ import { Router, Route, Redirect, browserHistory } from 'react-router'
 import { syncHistoryWithStore } from 'react-router-redux'
 import { Provider } from 'react-redux'
 import Home from './Pages/Home'
+import Manage from './Pages/Manage'
+import Show from './Pages/Show'
 import Login from './Pages/Session/Login'
 import Register from './Pages/Session/Register'
 import NotFoundPage from './Pages/NotFoundPage'
@@ -26,7 +28,8 @@ const routes = (
         <Route path="/login" component={() => <Login />} />
         <Route path="/register" component={() => <Register />} />
         <Route path="/" component={props => <Home {...props} />}>
-            <Route path="/manage" component={() => <div>管理</div>} />
+            <Route path="/manage" component={() => <Manage />} />
+            <Route path="/show" component={() => <Show />} />
             <Route path="/map" component={() => <div>地图</div>} />
             <Route path="/help" component={() => <div>帮助</div>} />
             <Route path="/404" component={() => <NotFoundPage />} />

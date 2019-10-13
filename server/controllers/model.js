@@ -16,7 +16,12 @@ const dumpModelData = (modelPath, id) => {
             )
             for (let k in metadata) res[k] = metadata[k]
         } else {
-            res[file] = `/data/models/${id}/${file}`
+            const filePath = path.resolve(modelPath, file)
+            if (!fs.statSync(filePath).isFile()) {
+                const fileList = fs.readdirSync(filePath)
+                if (fileList.length > 0)
+                    res[file] = `/data/models/${id}/${file}/${fileList[0]}`
+            }
         }
     }
 
@@ -64,6 +69,8 @@ const addModel = async ctx => {
         json.name = name
         json.type = type
         json.desc = desc || ''
+        json.createTime = moment().valueOf()
+        json.updateTime = moment().valueOf()
         fs.writeFileSync(
             path.resolve(modelPath, 'metadata.json'),
             JSON.stringify(json)
@@ -72,15 +79,24 @@ const addModel = async ctx => {
         if (files) {
             for (let filename in files) {
                 const file = files[filename]
+
+                const writePath = path.resolve(modelPath, filename)
+                fs.mkdirSync(writePath)
+
                 const reader = fs.createReadStream(file.path)
-                const filePath = path.resolve(modelPath, file.name)
+                const filePath = path.resolve(writePath, file.name)
                 const writer = fs.createWriteStream(filePath)
                 reader.pipe(writer)
             }
         }
 
+        const newModel = dumpModelData(
+            path.resolve(modelTempStoreRoot, json.id),
+            json.id
+        )
         ctx.body = {
-            message: '上传成功'
+            message: '上传成功',
+            data: newModel
         }
     } catch (e) {
         ctx.response.body = { message: e.toString() }
@@ -123,6 +139,7 @@ const updateModel = async ctx => {
         for (let key in params) {
             metadata[key] = params[key]
         }
+        metadata.updateTime = moment().valueOf()
         fs.writeFileSync(metadataFilePath, JSON.stringify(metadata))
 
         ctx.body = {

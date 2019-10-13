@@ -19,7 +19,7 @@ const doFetch = (url, param = {}) => {
         if (!contentType) {
             let params = new FormData()
             for (let key in payload) {
-                params.append(`${key}`, payload[key])
+                if (payload[key]) params.append(`${key}`, payload[key])
             }
             return fetch(url, {
                 method: 'post',

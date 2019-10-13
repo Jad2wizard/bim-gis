@@ -5,7 +5,8 @@
 
 import { all, call } from 'redux-saga/effects'
 import sessionSagas from './../Pages/Session/sagas'
+import ManageSagas from './../Pages/Manage/sagas'
 
 export default function*() {
-    yield all([call(sessionSagas)])
+    yield all([call(sessionSagas), call(ManageSagas)])
 }

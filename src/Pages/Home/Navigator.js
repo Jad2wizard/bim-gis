@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { Menu, Tooltip, Icon } from 'antd'
+import React, { useEffect, useCallback } from 'react'
+import { Menu, Icon } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import { routerActions } from 'react-router-redux'
 import styles from './Navigator.less'
@@ -11,6 +11,11 @@ const NAV_LIST = [
         key: '/manage',
         text: '模型管理',
         icon: 'home'
+    },
+    {
+        key: '/show',
+        text: '模型展示',
+        icon: 'read'
     },
     {
         key: '/map',
