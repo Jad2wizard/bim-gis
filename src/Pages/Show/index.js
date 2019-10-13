@@ -8,9 +8,14 @@ import elementResizeEvent from 'element-resize-event'
 import { getModel } from './../Manage/actions'
 import styles from './index.less'
 
+window.THREE = THREE
 const ObjLoader = new OBJLoader()
 const MtlLoader = new MTLLoader()
 const zeroPoint = new THREE.Vector3(0, 0, 0)
+const delay = timeout =>
+    new Promise(res => {
+        setTimeout(res, timeout)
+    })
 
 const Show = React.memo(() => {
     const dispatch = useDispatch()
@@ -36,6 +41,7 @@ const Show = React.memo(() => {
     const camera = useRef(null)
     const control = useRef(null)
     const center = useRef(zeroPoint)
+    const radius = useRef(0)
 
     const containerRef = useCallback(node => {
         if (node) setContainer(node)
@@ -54,9 +60,9 @@ const Show = React.memo(() => {
             1,
             200000
         )
-        camera.current.position.x = 12620
-        camera.current.position.y = 64238
-        camera.current.position.z = 65242
+        // camera.current.position.x = 12620
+        // camera.current.position.y = 64238
+        // camera.current.position.z = 65242
 
         window.camera = camera.current
         const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
@@ -86,7 +92,6 @@ const Show = React.memo(() => {
                     model.objFile,
                     object => {
                         scene.current.add(object)
-                        camera.current.lookAt(object)
                         window.object = object
                         calcObjCenter(object)
                     }
@@ -95,7 +100,6 @@ const Show = React.memo(() => {
         } else {
             ObjLoader.load(model.objFile, object => {
                 scene.current.add(object)
-                camera.current.lookAt(object)
                 object.current = object
                 calcObjCenter(object)
             })
@@ -122,29 +126,41 @@ const Show = React.memo(() => {
         renderer.current.render(scene.current, camera.current)
     }, [])
 
-    const calcObjCenter = useCallback(object => {
-        const res = new THREE.Vector3(0, 0, 0)
-        setTimeout(() => {
-            for (let child of object.children) {
-                const center = child.geometry.boundingSphere.center
-                res.x += center.x
-                res.y += center.y
-                res.z += center.z
+    const calcObjCenter = useCallback(async object => {
+        const newCenter = new THREE.Vector3(0, 0, 0)
+        let newRadius = 0
+        for (let child of object.children) {
+            let boundingSphere = child.geometry.boundingSphere
+            while (!boundingSphere) {
+                await delay(200)
+                boundingSphere = child.geometry.boundingSphere
             }
-            const meshNum = object.children.length
-            if (meshNum > 0) {
-                res.x = res.x / meshNum
-                res.y = res.y / meshNum
-                res.z = res.z / meshNum
-            }
-            center.current = res
-            console.log(res)
-            control.current = new OrbitControls(
-                camera.current,
-                renderer.current.domElement,
-                res
-            )
-        }, 2000)
+            const { x, y, z } = boundingSphere.center
+            newCenter.x += x
+            newCenter.y += y
+            newCenter.z += z
+            const temp = Math.max(x, y, z)
+            if (temp > newRadius) newRadius = temp
+        }
+        const meshNum = object.children.length
+        if (meshNum > 0) {
+            newCenter.x = newCenter.x / meshNum
+            newCenter.y = newCenter.y / meshNum
+            newCenter.z = newCenter.z / meshNum
+        }
+
+        center.current = newCenter
+        radius.current = newRadius
+
+        control.current = new OrbitControls(
+            camera.current,
+            renderer.current.domElement,
+            newCenter
+        )
+
+        camera.current.position.x = (1.6 * newRadius) / 1.73205
+        camera.current.position.y = (2.0 * newRadius) / 1.73205 //除以根号3
+        camera.current.position.z = (1.6 * newRadius) / 1.73205
     }, [])
 
     return <div ref={containerRef} className={styles.container}></div>

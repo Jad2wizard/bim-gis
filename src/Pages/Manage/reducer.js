@@ -40,8 +40,8 @@ const uploadVisible = (state = false, action) => {
     switch (action.type) {
         case actions.SET_UPLOAD_VISIBLE:
             return action.visible
-        // case actions.REC_ADD_MODEL:
-        //     return false
+        case actions.REC_ADD_MODEL:
+            return false
         default:
             return state
     }
