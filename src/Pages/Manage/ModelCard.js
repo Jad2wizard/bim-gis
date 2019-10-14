@@ -1,13 +1,13 @@
 import React from 'react'
-import { Row, Col } from 'antd'
+import { Row, Col, Icon } from 'antd'
 import moment from 'moment'
 import styles from './ModelCard.less'
 
-const ModelCard = React.memo(({ model, onClick }) => {
+const ModelCard = React.memo(({ model, onSelect, onDelete }) => {
     const { name, image, createTime, updateTime } = model
 
     return (
-        <div className={styles.container} onClick={() => onClick(model.id)}>
+        <div className={styles.container} onClick={() => onSelect(model.id)}>
             <img src={image || '/img/timg.c98df3e.jpg'} />
             <div className={styles.body}>
                 <Row key="name">
@@ -35,6 +35,13 @@ const ModelCard = React.memo(({ model, onClick }) => {
                     </Col>
                 </Row>
             </div>
+            <Icon
+                type="delete"
+                onClick={e => {
+                    e.stopPropagation()
+                    onDelete(model.id)
+                }}
+            />
         </div>
     )
 })

@@ -7,6 +7,14 @@ const modelList = (state = [], action) => {
             return action.modelList
         case actions.REC_ADD_MODEL:
             return [...state, action.model]
+        case actions.REC_DEL_MODEL: {
+            const nextState = [...state]
+            nextState.splice(
+                nextState.findIndex(m => m.id === action.modelId),
+                1
+            )
+            return nextState
+        }
         default:
             return state
     }

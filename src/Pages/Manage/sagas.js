@@ -14,6 +14,19 @@ function* getModel(id) {
     }
 }
 
+function* delModel(id) {
+    try {
+        if (!id) throw new Error('缺少模型id')
+        yield fetchProxy(`/model/${id}`, {
+            method: 'DELETE',
+            contentType: 'application/json'
+        })
+        yield put(actions.delModel('receive', { modelId: id }))
+    } catch (e) {
+        yield put(actions.delModel('error', { error: e.toString() }))
+    }
+}
+
 function* addModel(model) {
     try {
         const { name, type, objFile } = model
@@ -36,6 +49,7 @@ function* addModel(model) {
 function* watchGetModel() {
     while (true) {
         const { id } = yield take(actions.REQ_GET_MODEL)
+        console.log(id)
         yield fork(getModel, id)
     }
 }
@@ -47,6 +61,13 @@ function* watchAddModel() {
     }
 }
 
+function* watchDelModel() {
+    while (true) {
+        const { modelId } = yield take(actions.REQ_DEL_MODEL)
+        yield fork(delModel, modelId)
+    }
+}
+
 export default function*() {
-    yield all([call(watchGetModel), call(watchAddModel)])
+    yield all([call(watchGetModel), call(watchAddModel), call(watchDelModel)])
 }

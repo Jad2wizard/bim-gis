@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { routerActions } from 'react-router-redux'
 import { Button } from 'antd'
-import { setUploadVisible, getModel } from './actions'
+import { setUploadVisible, getModel, delModel } from './actions'
 import ModelUpload from './Upload'
 import ModelCard from './ModelCard'
 import styles from './index.less'
@@ -20,6 +20,10 @@ const Manage = React.memo(() => {
         dispatch(routerActions.push(`/show?id=${modelId}`))
     }, [])
 
+    const handleDeleteModel = useCallback(modelId => {
+        dispatch(delModel('request', { modelId }))
+    }, [])
+
     useEffect(() => {
         dispatch(getModel('request', {}))
     }, [])
@@ -34,7 +38,8 @@ const Manage = React.memo(() => {
                     <ModelCard
                         model={model}
                         key={model.id}
-                        onClick={handleClickModel}
+                        onSelect={handleClickModel}
+                        onDelete={handleDeleteModel}
                     />
                 ))}
                 <div key="hidden1" className={styles.hiddenDiv}></div>

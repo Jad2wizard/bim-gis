@@ -42,6 +42,7 @@ const Show = React.memo(() => {
     const control = useRef(null)
     const center = useRef(zeroPoint)
     const radius = useRef(0)
+    const pointLight = useRef(null)
 
     const containerRef = useCallback(node => {
         if (node) setContainer(node)
@@ -67,8 +68,8 @@ const Show = React.memo(() => {
         window.camera = camera.current
         const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
         scene.current.add(ambientLight)
-        const pointLight = new THREE.PointLight(0xffffff, 0.8)
-        camera.current.add(pointLight)
+        pointLight.current = new THREE.PointLight(0xffffff, 0.8)
+        camera.current.add(pointLight.current)
         scene.current.add(camera.current)
 
         renderer.current = new THREE.WebGLRenderer({
@@ -161,6 +162,10 @@ const Show = React.memo(() => {
         camera.current.position.x = (1.6 * newRadius) / 1.73205
         camera.current.position.y = (2.0 * newRadius) / 1.73205 //除以根号3
         camera.current.position.z = (1.6 * newRadius) / 1.73205
+
+        pointLight.current.position.x = 1 * newRadius
+        pointLight.current.position.y = 1 * newRadius
+        pointLight.current.position.z = 1 * newRadius
     }, [])
 
     return <div ref={containerRef} className={styles.container}></div>

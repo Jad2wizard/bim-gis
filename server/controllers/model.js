@@ -42,6 +42,7 @@ const getModel = async ctx => {
                 res.push(dumpModelData(modelPath, dir))
             }
         }
+        res.sort((a, b) => (a.updateTime > b.updateTime ? -1 : 1))
         ctx.body = {
             message: '成功获取模型',
             data: res

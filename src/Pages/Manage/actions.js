@@ -26,6 +26,20 @@ export const addModel = (status, { model, error }) => {
     }
 }
 
+export const REQ_DEL_MODEL = '请求删除模型'
+export const REC_DEL_MODEL = '删除模型成功'
+export const ERR_DEL_MODEL = '删除模型失败'
+export const delModel = (status, { modelId, error }) => {
+    switch (status) {
+        case 'request':
+            return { type: REQ_DEL_MODEL, modelId }
+        case 'receive':
+            return { type: REC_DEL_MODEL, modelId }
+        case 'error':
+            return { type: ERR_DEL_MODEL, error }
+    }
+}
+
 export const SET_UPLOAD_VISIBLE = '设置上传界面是否可见'
 export const setUploadVisible = visible => ({
     type: SET_UPLOAD_VISIBLE,
