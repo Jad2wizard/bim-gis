@@ -5,3 +5,4 @@ res/js/*
 *.DS_Store
 .idea/*
 diff.log
+BIM_GIS*

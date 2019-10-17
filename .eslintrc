@@ -19,13 +19,14 @@
   "rules": {
     "indent": [
       "error",
-      4,
+      "tab",
       {"SwitchCase": 1}
     ],
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "no-console": "off"
+    "no-console": "warn",
+    "no-await-in-loop": "warn"
   }
 }
