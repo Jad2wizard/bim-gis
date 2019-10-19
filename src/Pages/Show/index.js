@@ -15,7 +15,7 @@ const ObjLoader = new OBJLoader()
 const MtlLoader = new MTLLoader()
 const StlLoader = new STLLoader()
 const FbxLoader = new FBXLoader()
-const defaultModelColor = '#333'
+const defaultModelColor = '#888'
 const zeroPoint = new THREE.Vector3(0, 0, 0)
 const boundingBox = new THREE.Box3()
 

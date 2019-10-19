@@ -8,14 +8,10 @@ const modelTempStoreRoot = path.resolve(__dirname, './../../res/data/models')
 const dumpModelData = (modelPath, id) => {
 	const res = {}
 	if (!fs.existsSync(modelPath)) throw new Error('模型不存在')
-	for (let file of fs.readdirSync(modelPath)) {
-		if (file == 'metadata.json') {
-			const metadata = JSON.parse(
-				fs.readFileSync(path.resolve(modelPath, file), 'utf-8')
-			)
-			for (let k in metadata) res[k] = metadata[k]
-		}
-	}
+	const metadataPath = path.resolve(modelPath, 'metadata.json')
+	if (!fs.existsSync(metadataPath)) throw new Error('模型信息文件不存在')
+	const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
+	for (let k in metadata) res[k] = metadata[k]
 	return res
 }
 
@@ -47,7 +43,7 @@ const getModel = async ctx => {
 const addModel = async ctx => {
 	try {
 		const files = ctx.request.files
-		const {name, type, desc} = ctx.request.body
+		const {name, type, desc, lat, lng} = ctx.request.body
 		if (!name) throw new Error('缺少模型名称')
 		if (!type) throw new Error('缺少模型类型')
 
@@ -61,6 +57,8 @@ const addModel = async ctx => {
 		json.name = name
 		json.type = type
 		json.desc = desc || ''
+		json.lng = lng
+		json.lat = lat
 		json.createTime = moment().valueOf()
 		json.updateTime = moment().valueOf()
 		if (files) {

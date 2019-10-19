@@ -48,6 +48,28 @@ function* addModel(model) {
 	}
 }
 
+function* updateModel(params) {
+	try {
+		yield fetchProxy('/model/' + params.id, {
+			method: 'PUT',
+			payload: params,
+			contentType: 'application/json'
+		})
+		yield put(actions.updateModel('receive', {params}))
+		message.success('更新成功')
+	} catch (e) {
+		message.error(e.toString())
+		yield put(actions.updateModel('error', {error: e.toString()}))
+	}
+}
+
+function* watchUpdateModel() {
+	while (true) {
+		const {params} = yield take(actions.REQ_UPDATE_MODEL)
+		yield fork(updateModel, params)
+	}
+}
+
 function* watchGetModel() {
 	while (true) {
 		const {id} = yield take(actions.REQ_GET_MODEL)
@@ -70,5 +92,10 @@ function* watchDelModel() {
 }
 
 export default function*() {
-	yield all([call(watchGetModel), call(watchAddModel), call(watchDelModel)])
+	yield all([
+		call(watchGetModel),
+		call(watchAddModel),
+		call(watchDelModel),
+		call(watchUpdateModel)
+	])
 }

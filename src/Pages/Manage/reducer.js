@@ -4,9 +4,34 @@ import * as actions from './actions'
 const modelList = (state = [], action) => {
 	switch (action.type) {
 		case actions.REC_GET_MODEL:
-			return action.modelList
-		case actions.REC_ADD_MODEL:
-			return [action.model, ...state]
+			return action.modelList.map(model => ({
+				...model,
+				lng: Number(model.lng),
+				lat: Number(model.lat)
+			}))
+		case actions.REC_ADD_MODEL: {
+			const {model} = action
+			return [
+				{
+					...action.model,
+					lng: Number(model.lng),
+					lat: Number(model.lat)
+				},
+				...state
+			]
+		}
+		case actions.REC_UPDATE_MODEL: {
+			const {params} = action
+			const modelIndex = state.findIndex(m => m.id === params.id)
+			if (modelIndex === -1) return state
+			const nextModel = {...state[modelIndex]}
+			for (let k in params) nextModel[k] = params[k]
+			return [
+				...state.slice(0, modelIndex),
+				nextModel,
+				...state.slice(modelIndex + 1)
+			]
+		}
 		case actions.REC_DEL_MODEL: {
 			const nextState = [...state]
 			nextState.splice(
