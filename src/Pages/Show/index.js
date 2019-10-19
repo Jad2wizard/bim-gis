@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
+import {STLLoader} from 'three/examples/jsm/loaders/STLLoader'
+import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader'
 import elementResizeEvent from 'element-resize-event'
 import {getModel} from './../Manage/actions'
 import styles from './index.less'
@@ -11,8 +13,11 @@ import styles from './index.less'
 window.THREE = THREE
 const ObjLoader = new OBJLoader()
 const MtlLoader = new MTLLoader()
-const defaultModelColor = '#aaa'
+const StlLoader = new STLLoader()
+const FbxLoader = new FBXLoader()
+const defaultModelColor = '#333'
 const zeroPoint = new THREE.Vector3(0, 0, 0)
+const boundingBox = new THREE.Box3()
 
 const loadObj = url =>
 	new Promise((resolve, reject) => {
@@ -24,9 +29,28 @@ const loadMtl = url =>
 		MtlLoader.load(url, mtl => resolve(mtl), () => {}, err => reject(err))
 	})
 
-const delay = timeout =>
-	new Promise(res => {
-		setTimeout(res, timeout)
+const loadStl = url =>
+	new Promise((resolve, reject) => {
+		StlLoader.load(
+			url,
+			geometry => {
+				resolve(geometry)
+			},
+			() => {},
+			err => reject(err)
+		)
+	})
+
+const loadFbx = url =>
+	new Promise((resolve, reject) => {
+		FbxLoader.load(
+			url,
+			object => {
+				resolve(object)
+			},
+			() => {},
+			err => reject(err)
+		)
 	})
 
 const Show = React.memo(() => {
@@ -56,6 +80,8 @@ const Show = React.memo(() => {
 	const radius = useRef(0)
 	const pointLight = useRef(null)
 	const object = useRef(null)
+	const mixers = useRef([])
+	const clock = useRef(null)
 
 	const containerRef = useCallback(node => {
 		if (node) setContainer(node)
@@ -66,6 +92,8 @@ const Show = React.memo(() => {
 			if (!container || !model) return
 
 			const {clientWidth, clientHeight} = container
+
+			clock.current = new THREE.Clock()
 
 			scene.current = new THREE.Scene()
 
@@ -93,27 +121,8 @@ const Show = React.memo(() => {
 
 			animate()
 
-			if (model.mtlFile) {
-				const material = await loadMtl(model.mtlFile)
-				material.preload()
-				ObjLoader.setMaterials(material)
-			}
+			await loadModel(model)
 
-			const modelObj = await loadObj(model.objFile)
-			for (let c of modelObj.children) {
-				if (!c.material.color) continue
-				const {r, g, b} = c.material.color
-				if (r + g + b === 0) {
-					c.material.color = new THREE.Color(defaultModelColor)
-				}
-			}
-
-			scene.current.add(modelObj)
-
-			window.object = modelObj
-			object.current = modelObj
-
-			calcObjCenter(modelObj)
 			initLight()
 		}
 
@@ -128,10 +137,12 @@ const Show = React.memo(() => {
 		camera.current.add(pointLight.current)
 		scene.current.add(camera.current)
 
-		const dLight = new THREE.DirectionalLight('#fff')
-		dLight.target = object.current
-		dLight.position.set(1, 1, 1)
-		// scene.current.add(dLight)
+		if (object.current) {
+			const dLight = new THREE.DirectionalLight('#fff')
+			dLight.target = object.current
+			dLight.position.set(1, 1, 1)
+			scene.current.add(dLight)
+		}
 	}, [])
 
 	const handleResize = useCallback(() => {
@@ -149,50 +160,109 @@ const Show = React.memo(() => {
 	}, [])
 
 	const render = useCallback(() => {
+		if (mixers.current.length > 0) {
+			for (let i = 0; i < mixers.current.length; i++) {
+				mixers[i].update(clock.current.getDelta())
+			}
+		}
+
 		camera.current.lookAt(center.current)
 		if (control.current) control.current.update()
 		renderer.current.render(scene.current, camera.current)
 	}, [])
 
-	const calcObjCenter = useCallback(async object => {
-		const newCenter = new THREE.Vector3(0, 0, 0)
-		let newRadius = 0
-		for (let child of object.children) {
-			let boundingSphere = child.geometry.boundingSphere
-			while (!boundingSphere) {
-				await delay(200)
-				boundingSphere = child.geometry.boundingSphere
+	const loadModel = useCallback(model => {
+		const asyncFunc = async model => {
+			let modelMesh = null
+			switch (model.type) {
+				case 'obj': {
+					if (model.mtlFile) {
+						const material = await loadMtl(model.mtlFile)
+						material.preload()
+						ObjLoader.setMaterials(material)
+					}
+
+					const modelObj = await loadObj(model.objFile)
+					for (let c of modelObj.children) {
+						if (!c.material.color) continue
+						const {r, g, b} = c.material.color
+						if (r + g + b === 0) {
+							c.material.color = new THREE.Color(
+								defaultModelColor
+							)
+						}
+					}
+					modelMesh = modelObj
+					break
+				}
+				case 'stl': {
+					const stlGeo = await loadStl(model.stlFile)
+					const stlMesh = new THREE.Mesh(
+						stlGeo,
+						new THREE.MeshPhongMaterial({
+							color: 0x999999,
+							specular: 0x111111,
+							shininess: 200
+						})
+					)
+					modelMesh = stlMesh
+					break
+				}
+				case 'fbx': {
+					const fbxMesh = await loadFbx(model.fbxFile)
+					// if(fbxMesh.animations) mixers.current.push(fbxMesh.animations)
+					//
+					// const action = fbxMesh.animations.clipAction( fbxMesh.animations[ 0 ] );
+					// action.play();
+
+					for (let c of fbxMesh.children) {
+						if (!c.material || !c.material.color) continue
+						c.material.color = new THREE.Color(defaultModelColor)
+					}
+					modelMesh = fbxMesh
+					break
+				}
+				default:
+					break
 			}
-			const {x, y, z} = boundingSphere.center
-			newCenter.x += x
-			newCenter.y += y
-			newCenter.z += z
-			const temp = Math.max(x, y, z)
-			if (temp > newRadius) newRadius = temp
+			if (modelMesh) {
+				scene.current.add(modelMesh)
+
+				boundingBox.expandByObject(modelMesh)
+				const {min, max} = boundingBox
+
+				center.current = new THREE.Vector3(
+					(max.x - min.x) / 2 + min.x,
+					(max.y - min.y) / 2 + min.y,
+					(max.z - min.z) / 2 + min.z
+				)
+
+				radius.current = Math.max(
+					max.x - min.x,
+					max.y - min.y,
+					max.z - min.z
+				)
+
+				control.current = new OrbitControls(
+					camera.current,
+					renderer.current.domElement,
+					center.current
+				)
+
+				camera.current.position.x = (1 * radius.current) / 1.73205
+				camera.current.position.y = (1.2 * radius.current) / 1.73205 //除以根号3
+				camera.current.position.z = (1 * radius.current) / 1.73205
+
+				pointLight.current.position.x = 1 * radius.current
+				pointLight.current.position.y = 1 * radius.current
+				pointLight.current.position.z = 1 * radius.current
+			}
+
+			window.object = modelMesh
+			object.current = modelMesh
 		}
-		const meshNum = object.children.length
-		if (meshNum > 0) {
-			newCenter.x = newCenter.x / meshNum
-			newCenter.y = newCenter.y / meshNum
-			newCenter.z = newCenter.z / meshNum
-		}
 
-		center.current = newCenter
-		radius.current = newRadius
-
-		control.current = new OrbitControls(
-			camera.current,
-			renderer.current.domElement,
-			newCenter
-		)
-
-		camera.current.position.x = (1.6 * newRadius) / 1.73205
-		camera.current.position.y = (2.0 * newRadius) / 1.73205 //除以根号3
-		camera.current.position.z = (1.6 * newRadius) / 1.73205
-
-		pointLight.current.position.x = 1 * newRadius
-		pointLight.current.position.y = 1 * newRadius
-		pointLight.current.position.z = 1 * newRadius
+		asyncFunc(model)
 	}, [])
 
 	return <div ref={containerRef} className={styles.container}></div>

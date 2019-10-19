@@ -2,6 +2,7 @@ import React, {useState, useCallback, useEffect} from 'react'
 import {useDispatch} from 'react-redux'
 import {Icon, Form, Input, Radio, Upload, Button, Modal} from 'antd'
 import {addModel} from './actions'
+import {MODEL_TYPE_FILE_MAP} from './../../utils'
 import styles from './Upload.less'
 
 const formItemLayout = {
@@ -15,26 +16,6 @@ const formItemLayout = {
 	}
 }
 
-const MODEL_TYPE_LIST = [
-	{
-		id: 'obj',
-		label: 'OBJ 文件',
-		key: 'objFile',
-		message: 'OBJ 文件不能为空'
-	},
-	{
-		id: 'stl',
-		label: 'STL 文件',
-		key: 'stlFile',
-		message: 'STL 文件不能为空'
-	},
-	{
-		id: 'fbx',
-		label: 'FBX 文件',
-		key: 'fbxFile',
-		message: 'FBX 文件不能为空'
-	}
-]
 const ModelUpload = props => {
 	const {getFieldDecorator, setFieldsValue, validateFields} = props.form
 	const dispatch = useDispatch()
@@ -50,27 +31,56 @@ const ModelUpload = props => {
 		validateFields((err, values) => {
 			if (!err) {
 				const image = values.image[0]
-				const mtlFile = values.mtlFile[0]
-				const objFile = values.objFile[0]
+				const files = {}
+				for (let ft of MODEL_TYPE_FILE_MAP[type]) {
+					const uploadFile = values[ft.key][0]
+					if (uploadFile) files[ft.key] = uploadFile.originFileObj
+				}
+
 				dispatch(
 					addModel('request', {
 						model: {
 							...values,
 							image: image ? image.originFileObj : null,
-							mtlFile: mtlFile ? mtlFile.originFileObj : null,
-							objFile: objFile ? objFile.originFileObj : null
+							...files
 						}
 					})
 				)
 			}
 		})
-	}, [])
+	}, [type])
 
-	const typeItem = MODEL_TYPE_LIST.find(item => item.id === type)
+	const renderFileUpload = useCallback(type => {
+		const fileTypeList = MODEL_TYPE_FILE_MAP[type]
+		return (
+			<React.Fragment>
+				{fileTypeList.map(item => (
+					<Form.Item key={item.id} label={item.label}>
+						{getFieldDecorator(item.key, {
+							rules: item.rules,
+							initialValue: [],
+							valuePropName: 'fileList',
+							getValueFromEvent: e => e.fileList
+						})(
+							<Upload
+								accept={`.${item.id}`}
+								onRemove={() =>
+									setFieldsValue({[item.key]: []})
+								}>
+								<Button>
+									<Icon type="upload" /> 点击上传
+								</Button>
+							</Upload>
+						)}
+					</Form.Item>
+				))}
+			</React.Fragment>
+		)
+	}, [])
 
 	return (
 		<Form {...formItemLayout}>
-			<Form.Item label="模型名称">
+			<Form.Item key="name" label="模型名称">
 				{getFieldDecorator('name', {
 					rules: [
 						{required: true, message: '模型名称不能为空'},
@@ -78,24 +88,26 @@ const ModelUpload = props => {
 					]
 				})(<Input />)}
 			</Form.Item>
-			<Form.Item label="模型类型">
+			<Form.Item key="type" label="模型类型">
 				{getFieldDecorator('type')(
 					<Radio.Group onChange={e => setType(e.target.value)}>
-						{MODEL_TYPE_LIST.map(t => (
-							<Radio value={t.id}>{t.id}</Radio>
+						{Object.keys(MODEL_TYPE_FILE_MAP).map(t => (
+							<Radio key={t} value={t}>
+								{t}
+							</Radio>
 						))}
 					</Radio.Group>
 				)}
 			</Form.Item>
-			<Form.Item label="模型描述">
+			<Form.Item key="desc" label="模型描述">
 				{getFieldDecorator('desc', {
 					rules: [{max: 80, message: '模型描述过长'}]
 				})(
 					<Input.TextArea
-						autosize={{minRows: 5, maxRows: 5}}></Input.TextArea>
+						autosize={{minRows: 3, maxRows: 3}}></Input.TextArea>
 				)}
 			</Form.Item>
-			<Form.Item label="模型缩略图">
+			<Form.Item key="image" label="模型缩略图">
 				{getFieldDecorator('image', {
 					initialValue: [],
 					valuePropName: 'fileList',
@@ -108,40 +120,8 @@ const ModelUpload = props => {
 					</Upload>
 				)}
 			</Form.Item>
-			{type === 'obj' && (
-				<Form.Item label="MTL 文件">
-					{getFieldDecorator('mtlFile', {
-						initialValue: [],
-						valuePropName: 'fileList',
-						getValueFromEvent: e => e.fileList
-					})(
-						<Upload
-							accept=".mtl"
-							onRemove={() => setFieldsValue({mtlFile: []})}>
-							<Button>
-								<Icon type="upload" /> 点击上传
-							</Button>
-						</Upload>
-					)}
-				</Form.Item>
-			)}
-			<Form.Item label={typeItem.label}>
-				{getFieldDecorator(typeItem.key, {
-					rules: [{required: true, message: typeItem.message}],
-					initialValue: [],
-					valuePropName: 'fileList',
-					getValueFromEvent: e => e.fileList
-				})(
-					<Upload
-						accept={`.${typeItem.id}`}
-						onRemove={() => setFieldsValue({[typeItem.key]: []})}>
-						<Button>
-							<Icon type="upload" /> 点击上传
-						</Button>
-					</Upload>
-				)}
-			</Form.Item>
-			<Form.Item wrapperCol={{span: 12, offset: 5}}>
+			{renderFileUpload(type)}
+			<Form.Item key="submit" wrapperCol={{span: 12, offset: 5}}>
 				<Button type="primary" onClick={handleSubmit}>
 					提交
 				</Button>
