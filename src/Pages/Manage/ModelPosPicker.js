@@ -2,6 +2,7 @@ import React, {useRef, useEffect, useState, useCallback} from 'react'
 import {Modal} from 'antd'
 import BaiduMap from './../../utils/map'
 import styles from './ModelPosPicker.less'
+const defaultCenter = [116.4035, 39.915]
 
 const Map = React.memo(({point = null, onSave, onCancel}) => {
 	const [container, setContainer] = useState(null)
@@ -22,7 +23,14 @@ const Map = React.memo(({point = null, onSave, onCancel}) => {
 			const map = new BaiduMap.Map('model-pos-picker', {
 				enableMapClick: false
 			})
-			map.centerAndZoom(new BaiduMap.Point(116.4035, 39.915), 8)
+
+			let center = defaultCenter
+			if (markerRef.current) {
+				const {lng, lat} = markerRef.current.getPosition()
+				center[0] = lng
+				center[1] = lat
+			}
+			map.centerAndZoom(new BaiduMap.Point(...defaultCenter), 8)
 			map.enableScrollWheelZoom(true)
 			map.disableDoubleClickZoom()
 			map.addEventListener('click', e => {
