@@ -41,3 +41,5 @@ export const delay = timeout =>
 	new Promise(res => {
 		setTimeout(res, timeout)
 	})
+
+export const defaultCenter = [116.4035, 39.915]

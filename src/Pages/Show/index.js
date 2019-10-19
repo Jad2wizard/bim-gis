@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react'
-import {useSelector, useDispatch} from 'react-redux'
+import {useSelector} from 'react-redux'
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
@@ -7,7 +7,6 @@ import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import {STLLoader} from 'three/examples/jsm/loaders/STLLoader'
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader'
 import elementResizeEvent from 'element-resize-event'
-import {getModel} from './../Manage/actions'
 import styles from './index.less'
 
 window.THREE = THREE
@@ -54,8 +53,6 @@ const loadFbx = url =>
 	})
 
 const Show = React.memo(() => {
-	const dispatch = useDispatch()
-
 	const [model, setModel] = useState(null)
 	const modelId = location.search.split('id=')[1]
 	const modelList = useSelector(state => state.manageState.modelList)
@@ -63,11 +60,7 @@ const Show = React.memo(() => {
 	useEffect(() => {
 		if (!modelId) return
 		const model = modelList.find(m => m.id === modelId)
-		if (!model) {
-			dispatch(getModel('request', {id: modelId}))
-		} else {
-			setModel(model)
-		}
+		setModel(model)
 	}, [modelList])
 
 	const [container, setContainer] = useState(null)
