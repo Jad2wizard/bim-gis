@@ -1,5 +1,5 @@
 import React from 'react'
-import {Row, Col, Icon} from 'antd'
+import {Tooltip, Row, Col, Icon} from 'antd'
 import moment from 'moment'
 import styles from './ModelCard.less'
 
@@ -8,7 +8,9 @@ const ModelCard = React.memo(({model, onSelect, onDelete}) => {
 
 	return (
 		<div className={styles.container} onClick={() => onSelect(model.id)}>
-			<img src={image || '/img/timg.c98df3e.jpg'} />
+			<Tooltip title={model.desc || ''}>
+				<img src={image || '/img/timg.c98df3e.jpg'} />
+			</Tooltip>
 			<div className={styles.body}>
 				<Row key="name">
 					<Col key="title" span={8}>

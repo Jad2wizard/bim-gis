@@ -97,6 +97,17 @@ const Show = React.memo(() => {
 
 			scene.current = new THREE.Scene()
 
+			const planeMesh = new THREE.Mesh(
+				new THREE.PlaneBufferGeometry(2000, 2000),
+				new THREE.MeshPhongMaterial({
+					color: 0x999999,
+					depthWrite: false
+				})
+			)
+			planeMesh.rotation.x = -Math.PI / 2
+			planeMesh.receiveShadow = true
+			scene.current.add(planeMesh)
+
 			camera.current = new THREE.PerspectiveCamera(
 				45,
 				clientWidth / clientHeight,
@@ -162,7 +173,7 @@ const Show = React.memo(() => {
 	const render = useCallback(() => {
 		if (mixers.current.length > 0) {
 			for (let i = 0; i < mixers.current.length; i++) {
-				mixers[i].update(clock.current.getDelta())
+				mixers.current[i].update(clock.current.getDelta())
 			}
 		}
 
@@ -210,10 +221,13 @@ const Show = React.memo(() => {
 				}
 				case 'fbx': {
 					const fbxMesh = await loadFbx(model.fbxFile)
-					// if(fbxMesh.animations) mixers.current.push(fbxMesh.animations)
-					//
-					// const action = fbxMesh.animations.clipAction( fbxMesh.animations[ 0 ] );
-					// action.play();
+
+					fbxMesh.mixer = new THREE.AnimationMixer(fbxMesh)
+					mixers.current.push(fbxMesh.mixer)
+					const action = fbxMesh.mixer.clipAction(
+						fbxMesh.animations[0]
+					)
+					action.play()
 
 					for (let c of fbxMesh.children) {
 						if (!c.material || !c.material.color) continue
