@@ -11,7 +11,7 @@ import styles from './index.less'
 window.THREE = THREE
 const ObjLoader = new OBJLoader()
 const MtlLoader = new MTLLoader()
-const defaultModelColor = '#888'
+const defaultModelColor = '#aaa'
 const zeroPoint = new THREE.Vector3(0, 0, 0)
 
 const loadObj = url =>
@@ -101,6 +101,7 @@ const Show = React.memo(() => {
 
 			const modelObj = await loadObj(model.objFile)
 			for (let c of modelObj.children) {
+				if (!c.material.color) continue
 				const {r, g, b} = c.material.color
 				if (r + g + b === 0) {
 					c.material.color = new THREE.Color(defaultModelColor)

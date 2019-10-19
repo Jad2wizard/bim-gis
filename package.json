@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "cross-env NODE_ENV=production node app.js",
-		"dev": "webpack --mode development",
+		"dev": "npm run dll && webpack --mode development",
 		"prod": "npm run dllProd && webpack --mode production",
 		"dllProd": "webpack --config webpack.config.dll.js --mode production",
 		"dll": "webpack --config webpack.config.dll.js --mode development",

@@ -14,6 +14,27 @@ const formItemLayout = {
 		sm: {span: 12}
 	}
 }
+
+const MODEL_TYPE_LIST = [
+	{
+		id: 'obj',
+		label: 'OBJ 文件',
+		key: 'objFile',
+		message: 'OBJ 文件不能为空'
+	},
+	{
+		id: 'stl',
+		label: 'STL 文件',
+		key: 'stlFile',
+		message: 'STL 文件不能为空'
+	},
+	{
+		id: 'fbx',
+		label: 'FBX 文件',
+		key: 'fbxFile',
+		message: 'FBX 文件不能为空'
+	}
+]
 const ModelUpload = props => {
 	const {getFieldDecorator, setFieldsValue, validateFields} = props.form
 	const dispatch = useDispatch()
@@ -28,7 +49,6 @@ const ModelUpload = props => {
 	const handleSubmit = useCallback(() => {
 		validateFields((err, values) => {
 			if (!err) {
-				console.log(values)
 				const image = values.image[0]
 				const mtlFile = values.mtlFile[0]
 				const objFile = values.objFile[0]
@@ -46,6 +66,8 @@ const ModelUpload = props => {
 		})
 	}, [])
 
+	const typeItem = MODEL_TYPE_LIST.find(item => item.id === type)
+
 	return (
 		<Form {...formItemLayout}>
 			<Form.Item label="模型名称">
@@ -59,9 +81,9 @@ const ModelUpload = props => {
 			<Form.Item label="模型类型">
 				{getFieldDecorator('type')(
 					<Radio.Group onChange={e => setType(e.target.value)}>
-						<Radio value="obj">obj</Radio>
-						<Radio value="fbx">fbx</Radio>
-						<Radio value="stl">stl</Radio>
+						{MODEL_TYPE_LIST.map(t => (
+							<Radio value={t.id}>{t.id}</Radio>
+						))}
 					</Radio.Group>
 				)}
 			</Form.Item>
@@ -103,24 +125,22 @@ const ModelUpload = props => {
 					)}
 				</Form.Item>
 			)}
-			{type === 'obj' && (
-				<Form.Item label="OBJ 文件">
-					{getFieldDecorator('objFile', {
-						rules: [{required: true, message: 'OBJ 文件不能为空'}],
-						initialValue: [],
-						valuePropName: 'fileList',
-						getValueFromEvent: e => e.fileList
-					})(
-						<Upload
-							accept=".obj"
-							onRemove={() => setFieldsValue({objFile: []})}>
-							<Button>
-								<Icon type="upload" /> 点击上传
-							</Button>
-						</Upload>
-					)}
-				</Form.Item>
-			)}
+			<Form.Item label={typeItem.label}>
+				{getFieldDecorator(typeItem.key, {
+					rules: [{required: true, message: typeItem.message}],
+					initialValue: [],
+					valuePropName: 'fileList',
+					getValueFromEvent: e => e.fileList
+				})(
+					<Upload
+						accept={`.${typeItem.id}`}
+						onRemove={() => setFieldsValue({[typeItem.key]: []})}>
+						<Button>
+							<Icon type="upload" /> 点击上传
+						</Button>
+					</Upload>
+				)}
+			</Form.Item>
 			<Form.Item wrapperCol={{span: 12, offset: 5}}>
 				<Button type="primary" onClick={handleSubmit}>
 					提交

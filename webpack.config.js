@@ -64,10 +64,10 @@ module.exports = (env, argv) => {
 			]
 		},
 		plugins: [
-			// new webpack.DllReferencePlugin({
-			//     context: __dirname,
-			//     manifest: require(__dirname + '/res/js/manifest.json')
-			// })
+			new webpack.DllReferencePlugin({
+				context: __dirname,
+				manifest: require(__dirname + '/res/js/manifest.json')
+			})
 		]
 	}
 
