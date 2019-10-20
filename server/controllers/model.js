@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const moment = require('moment')
+const unzip = require('unzip')
 const {rmdirSync} = require('jadwizard-lib')
 
 const modelTempStoreRoot = path.resolve(__dirname, './../../res/data/models')
@@ -65,13 +66,18 @@ const addModel = async ctx => {
 			for (let filename in files) {
 				const file = files[filename]
 
-				const writeFilePath = path.resolve(modelPath, file.name)
-
-				const reader = fs.createReadStream(file.path)
-				const writer = fs.createWriteStream(writeFilePath)
-				reader.pipe(writer)
-
-				json[filename] = `/data/models/${json.id}/${file.name}`
+				if (filename !== 'zipFile') {
+					const writeFilePath = path.resolve(modelPath, file.name)
+					const reader = fs.createReadStream(file.path)
+					const writer = fs.createWriteStream(writeFilePath)
+					reader.pipe(writer)
+					json[filename] = `/data/models/${json.id}/${file.name}`
+				} else {
+					const unzipPath = modelPath
+					fs.createReadStream(file.path).pipe(
+						unzip.Extract({path: unzipPath})
+					)
+				}
 			}
 		}
 

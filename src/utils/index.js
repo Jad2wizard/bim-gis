@@ -13,6 +13,14 @@ export const MODEL_TYPE_FILE_MAP = {
 			label: 'MTL 文件',
 			key: 'mtlFile',
 			rules: []
+		},
+		{
+			id: 'zip',
+			label: '贴图压缩文件',
+			key: 'zipFile',
+			rules: [],
+			tip:
+				'解压缩后的贴图文件或贴图文件夹将与mtl文件放在同一目录中，请注意贴图文件与mtl文件的相对位置'
 		}
 	],
 	stl: [

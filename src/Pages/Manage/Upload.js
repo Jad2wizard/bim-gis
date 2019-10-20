@@ -1,6 +1,6 @@
 import React, {useRef, useState, useCallback, useEffect} from 'react'
 import {useDispatch} from 'react-redux'
-import {Icon, Form, Input, Radio, Upload, Button, Modal} from 'antd'
+import {Tooltip, Icon, Form, Input, Radio, Upload, Button, Modal} from 'antd'
 import ModelPosPicker from './ModelPosPicker'
 import {addModel} from './actions'
 import {MODEL_TYPE_FILE_MAP} from './../../utils'
@@ -75,9 +75,11 @@ const ModelUpload = props => {
 								onRemove={() =>
 									setFieldsValue({[item.key]: []})
 								}>
-								<Button>
-									<Icon type="upload" /> 点击上传
-								</Button>
+								<Tooltip title={item.tip || null}>
+									<Button>
+										<Icon type="upload" /> 点击上传
+									</Button>
+								</Tooltip>
 							</Upload>
 						)}
 					</Form.Item>
