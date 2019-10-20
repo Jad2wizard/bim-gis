@@ -1,12 +1,19 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react'
-import {useSelector} from 'react-redux'
+import {useDispatch, useSelector} from 'react-redux'
+import moment from 'moment'
+import elementResizeEvent from 'element-resize-event'
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader'
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import {STLLoader} from 'three/examples/jsm/loaders/STLLoader'
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader'
-import elementResizeEvent from 'element-resize-event'
+import {
+	CSS2DRenderer,
+	CSS2DObject
+} from 'three/examples/jsm/renderers/CSS2DRenderer'
+import {updateModel} from './../Manage/actions'
+import {SENSOR_LIST} from './../../utils'
 import styles from './index.less'
 
 window.THREE = THREE
@@ -16,7 +23,8 @@ const StlLoader = new STLLoader()
 const FbxLoader = new FBXLoader()
 const defaultModelColor = '#888'
 const zeroPoint = new THREE.Vector3(0, 0, 0)
-const boundingBox = new THREE.Box3()
+const rayCaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
 
 const loadObj = url =>
 	new Promise((resolve, reject) => {
@@ -53,19 +61,19 @@ const loadFbx = url =>
 	})
 
 const Show = React.memo(() => {
+	const dispatch = useDispatch()
+
 	const [model, setModel] = useState(null)
+	const [container, setContainer] = useState(null)
+	const [sensorPickerVisible, setSensorPickerVisible] = useState(false)
+
 	const modelId = location.search.split('id=')[1]
 	const modelList = useSelector(state => state.manageState.modelList)
 
-	useEffect(() => {
-		if (!modelId) return
-		const model = modelList.find(m => m.id === modelId)
-		setModel(model)
-	}, [modelList])
-
-	const [container, setContainer] = useState(null)
-
+	const clickPos = useRef({x: 0, y: 0})
+	const intersectPoint = useRef(null)
 	const renderer = useRef(null)
+	const labelRendererRef = useRef(null)
 	const scene = useRef(null)
 	const camera = useRef(null)
 	const control = useRef(null)
@@ -76,13 +84,19 @@ const Show = React.memo(() => {
 	const mixers = useRef([])
 	const clock = useRef(null)
 
+	useEffect(() => {
+		if (!modelId) return
+		const model = modelList.find(m => m.id === modelId)
+		setModel(model)
+	}, [modelList])
+
 	const containerRef = useCallback(node => {
 		if (node) setContainer(node)
 	}, [])
 
 	useEffect(() => {
 		async function init() {
-			if (!container || !model) return
+			if (!container || !model || scene.current) return
 
 			const {clientWidth, clientHeight} = container
 
@@ -91,9 +105,9 @@ const Show = React.memo(() => {
 			scene.current = new THREE.Scene()
 
 			const planeMesh = new THREE.Mesh(
-				new THREE.PlaneBufferGeometry(2000, 2000),
-				new THREE.MeshPhongMaterial({
-					color: 0x999999,
+				new THREE.PlaneBufferGeometry(100000, 100000),
+				new THREE.MeshLambertMaterial({
+					color: 0xdddddd,
 					depthWrite: false
 				})
 			)
@@ -119,6 +133,15 @@ const Show = React.memo(() => {
 			renderer.current.setSize(clientWidth, clientHeight)
 			renderer.current.autoClear = true
 
+			const labelRenderer = new CSS2DRenderer()
+			labelRenderer.setSize(clientWidth, clientHeight)
+			labelRendererRef.current = labelRenderer
+
+			labelRenderer.domElement.style.position = 'absolute'
+			labelRenderer.domElement.style.top = 0
+			container.appendChild(labelRenderer.domElement)
+			renderer.current.domElement.style.position = 'absolute'
+			renderer.current.domElement.style.top = 0
 			container.appendChild(renderer.current.domElement)
 
 			elementResizeEvent(container, handleResize)
@@ -156,6 +179,7 @@ const Show = React.memo(() => {
 		camera.current.updateProjectionMatrix()
 
 		renderer.current.setSize(clientWidth, clientHeight)
+		labelRendererRef.current.setSize(clientWidth, clientHeight)
 	}, [container])
 
 	const animate = useCallback(() => {
@@ -172,7 +196,9 @@ const Show = React.memo(() => {
 
 		camera.current.lookAt(center.current)
 		if (control.current) control.current.update()
+
 		renderer.current.render(scene.current, camera.current)
+		labelRendererRef.current.render(scene.current, camera.current)
 	}, [])
 
 	const loadModel = useCallback(model => {
@@ -235,6 +261,7 @@ const Show = React.memo(() => {
 			if (modelMesh) {
 				scene.current.add(modelMesh)
 
+				const boundingBox = new THREE.Box3()
 				boundingBox.expandByObject(modelMesh)
 				const {min, max} = boundingBox
 
@@ -249,6 +276,8 @@ const Show = React.memo(() => {
 					max.y - min.y,
 					max.z - min.z
 				)
+
+				renderSensors(model.sensors)
 
 				control.current = new OrbitControls(
 					camera.current,
@@ -272,7 +301,183 @@ const Show = React.memo(() => {
 		asyncFunc(model)
 	}, [])
 
-	return <div ref={containerRef} className={styles.container}></div>
+	const getIntersectObj = useCallback(
+		e => {
+			const {clientX, clientY} = e
+			const {offsetWidth, offsetHeight} = container
+			const x = clientX - e.target.parentElement.offsetLeft
+			const y = clientY - e.target.parentElement.offsetTop
+			mouse.x = (x / offsetWidth) * 2 - 1
+			mouse.y = 1 - (y / offsetHeight) * 2
+
+			rayCaster.setFromCamera(mouse, camera.current)
+
+			const intersects = rayCaster.intersectObjects(
+				scene.current.children,
+				true
+			)
+			if (intersects.length > 0) {
+				return {
+					position: {x, y},
+					intersectObj: intersects[0]
+				}
+			}
+
+			return {}
+		},
+		[container]
+	)
+
+	const handleRightClick = useCallback(
+		e => {
+			const {position, intersectObj} = getIntersectObj(e)
+			if (intersectObj) {
+				clickPos.current = position
+				intersectPoint.current = intersectObj.point
+				setSensorPickerVisible(true)
+			}
+		},
+		[container]
+	)
+
+	const handleDeleteSensor = useCallback(
+		e => {
+			const {intersectObj} = getIntersectObj(e)
+			if (intersectObj && intersectObj.object.parent.name === 'sensors') {
+				const {sensors} = model
+				const index = sensors.findIndex(
+					s => s.id === intersectObj.object.name
+				)
+				sensors.splice(index, 1)
+				dispatch(
+					updateModel('request', {
+						params: {
+							id: model.id,
+							sensors
+						}
+					})
+				)
+			}
+		},
+		[container, model]
+	)
+
+	const handleSensorAdd = useCallback(
+		sensorType => {
+			if (!container || !scene.current || !camera.current) return
+			dispatch(
+				updateModel('request', {
+					params: {
+						id: model.id,
+						sensors: [
+							...model.sensors,
+							{
+								id: moment().valueOf() + '_sensor',
+								type: sensorType,
+								position: {...intersectPoint.current}
+							}
+						]
+					}
+				})
+			)
+			setSensorPickerVisible(false)
+		},
+		[container, model]
+	)
+
+	const handleHiddenSensorPicker = useCallback(() => {
+		setSensorPickerVisible(false)
+	}, [])
+
+	//draw sensors
+	useEffect(() => {
+		if (!container || !scene.current || !model) return
+		renderSensors(model.sensors)
+	}, [model, container])
+
+	const renderSensors = useCallback(sensors => {
+		let sensorsGroup = scene.current.getChildByName('sensors')
+		if (sensorsGroup) scene.current.remove(sensorsGroup)
+		const labelDomList = labelRendererRef.current.domElement.querySelectorAll(
+			'*'
+		)
+		for (let dom of labelDomList)
+			labelRendererRef.current.domElement.removeChild(dom)
+
+		sensorsGroup = new THREE.Group()
+		sensorsGroup.name = 'sensors'
+		scene.current.add(sensorsGroup)
+
+		for (let s of sensors) {
+			const sc = SENSOR_LIST.find(sc => sc.id === s.type)
+			if (sc) {
+				const tmpMesh = sc.mesh.clone()
+				const scale = radius.current / 150
+				const {x, y, z} = s.position
+				tmpMesh.position.x = x
+				tmpMesh.position.y = y
+				tmpMesh.position.z = z
+				tmpMesh.scale.x = scale
+				tmpMesh.scale.y = scale
+				tmpMesh.scale.z = scale
+				tmpMesh.name = s.id
+
+				const label = genLabel(sc.name)
+				tmpMesh.add(label)
+				sensorsGroup.add(tmpMesh)
+			}
+		}
+	}, [])
+
+	return (
+		<div
+			ref={containerRef}
+			className={styles.container}
+			onContextMenu={handleRightClick}
+			onClick={handleHiddenSensorPicker}
+			onDoubleClick={handleDeleteSensor}>
+			{sensorPickerVisible && (
+				<SensorPicker
+					top={clickPos.current.y}
+					left={clickPos.current.x}
+					onClick={handleSensorAdd}
+				/>
+			)}
+			<div className={styles.tip}>
+				<span>单击右键添加传感器</span>
+				<span>双击左键删除传感器</span>
+				<span>左键拖动旋转模型</span>
+				<span>右键拖动移动模型</span>
+				<span>鼠标滚轮缩放模型</span>
+			</div>
+		</div>
+	)
 })
 
+const genLabel = content => {
+	const labelDiv = document.createElement('div')
+	labelDiv.className = styles.label
+	labelDiv.textContent = content
+
+	const label = new CSS2DObject(labelDiv)
+
+	return label
+}
+
+const SensorPicker = React.memo(({top, left, onClick}) => {
+	return (
+		<div className={styles.sensor} style={{top, left}}>
+			{SENSOR_LIST.map(s => (
+				<span
+					key={s.id}
+					onClick={e => {
+						e.stopPropagation()
+						onClick(s.id)
+					}}>
+					{s.name}
+				</span>
+			))}
+		</div>
+	)
+})
 export default Show

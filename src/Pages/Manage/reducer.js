@@ -1,24 +1,20 @@
 import {combineReducers} from 'redux'
 import * as actions from './actions'
 
+const transformModel = model => ({
+	...model,
+	lng: Number(model.lng),
+	lat: Number(model.lat),
+	sensors: model.sensors || []
+})
+
 const modelList = (state = [], action) => {
 	switch (action.type) {
 		case actions.REC_GET_MODEL:
-			return action.modelList.map(model => ({
-				...model,
-				lng: Number(model.lng),
-				lat: Number(model.lat)
-			}))
+			return action.modelList.map(model => transformModel(model))
 		case actions.REC_ADD_MODEL: {
 			const {model} = action
-			return [
-				{
-					...action.model,
-					lng: Number(model.lng),
-					lat: Number(model.lat)
-				},
-				...state
-			]
+			return [transformModel(model), ...state]
 		}
 		case actions.REC_UPDATE_MODEL: {
 			const {params} = action

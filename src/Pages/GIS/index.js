@@ -1,10 +1,12 @@
 import React, {useState, useRef, useCallback, useEffect} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
 import {routerActions} from 'react-router-redux'
+import moment from 'moment'
 import BaiduMap from './../../utils/map'
-import {defaultCenter} from './../../utils'
+import {defaultCenter, defaultModelImg} from './../../utils'
 import styles from './index.less'
 
+const infoWindow = new BaiduMap.InfoWindow()
 const GIS = React.memo(() => {
 	const dispatch = useDispatch()
 	const [container, setContainer] = useState(null)
@@ -49,16 +51,33 @@ const GIS = React.memo(() => {
 					map.removeOverlay(mark)
 			}
 			for (let m of toDeInsertModel) {
-				const marker = new BaiduMap.Marker(
-					new BaiduMap.Point(m.lng, m.lat)
-				)
+				const point = new BaiduMap.Point(m.lng, m.lat)
+				const marker = new BaiduMap.Marker(point)
 				marker.id = m.id
-				marker.setLabel(
-					new BaiduMap.Label(m.name, {
-						offset: new BaiduMap.Size(20, -10)
-					})
-				)
 				map.addOverlay(marker)
+
+				marker.addEventListener('mouseover', () => {
+					infoWindow.setWidth(300)
+					infoWindow.setHeight(400)
+					infoWindow.setTitle(m.name)
+					let content = `模型类型: ${m.type}`
+					if (m.type) {
+						content += '<br/>'
+						content += `模型描述: ${m.desc}`
+					}
+					content += '<br/>'
+					content += `创建时间: ${moment(m.createTime).format(
+						'YYYY-MM-DD HH:mm:ss'
+					)}`
+					content += '<br/>'
+					content += `最近更新: ${moment(m.updateTime).format(
+						'YYYY-MM-DD HH:mm:ss'
+					)}`
+					content += `<img width="300" height="300" src="${m.image ||
+						defaultModelImg}"/>`
+					infoWindow.setContent(content)
+					map.openInfoWindow(infoWindow, point)
+				})
 			}
 
 			const points = map.getOverlays().map(m => m.getPosition())

@@ -4,6 +4,7 @@ import {Tooltip, Row, Col, Icon} from 'antd'
 import moment from 'moment'
 import {updateModel} from './actions'
 import ModelPosPicker from './ModelPosPicker'
+import {defaultModelImg} from './../../utils/index'
 import styles from './ModelCard.less'
 
 const ModelCard = React.memo(({model, onSelect, onDelete}) => {
@@ -57,7 +58,7 @@ const ModelCard = React.memo(({model, onSelect, onDelete}) => {
 					onSelect(model.id)
 			}}>
 			<Tooltip title={model.desc || ''}>
-				<img src={image || '/img/timg.c98df3e.jpg'} />
+				<img src={image || defaultModelImg} />
 			</Tooltip>
 			<div className={styles.body}>
 				<Row key="name">

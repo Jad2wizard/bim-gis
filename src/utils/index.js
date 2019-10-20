@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+
 export const MODEL_TYPE_FILE_MAP = {
 	obj: [
 		{
@@ -51,3 +53,24 @@ export const delay = timeout =>
 	})
 
 export const defaultCenter = [116.4035, 39.915]
+
+export const defaultModelImg = '/img/timg.c98df3e.jpg'
+
+export const SENSOR_LIST = [
+	{
+		id: 'thermometer',
+		name: '温度计',
+		mesh: new THREE.Mesh(
+			new THREE.BoxGeometry(1, 1, 1),
+			new THREE.MeshPhongMaterial({color: '#a85251'})
+		)
+	},
+	{
+		id: 'hygrometer',
+		name: '湿度计',
+		mesh: new THREE.Mesh(
+			new THREE.SphereGeometry(0.5, 32, 32),
+			new THREE.MeshPhongMaterial({color: '#328792'})
+		)
+	}
+]
