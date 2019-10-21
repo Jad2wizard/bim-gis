@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
+import {message} from 'antd'
 import moment from 'moment'
 import elementResizeEvent from 'element-resize-event'
 import * as THREE from 'three'
@@ -83,6 +84,7 @@ const Show = React.memo(() => {
 	const object = useRef(null)
 	const mixers = useRef([])
 	const clock = useRef(null)
+	const loadingRef = useRef(null)
 
 	useEffect(() => {
 		if (!modelId) return
@@ -97,6 +99,9 @@ const Show = React.memo(() => {
 	useEffect(() => {
 		async function init() {
 			if (!container || !model || scene.current) return
+
+			if (!loadingRef.current)
+				loadingRef.current = message.loading('正在加载模型', 0)
 
 			const {clientWidth, clientHeight} = container
 
@@ -118,8 +123,8 @@ const Show = React.memo(() => {
 			camera.current = new THREE.PerspectiveCamera(
 				45,
 				clientWidth / clientHeight,
-				1,
-				200000
+				0.001,
+				2000000000
 			)
 
 			window.scene = scene.current
@@ -296,6 +301,11 @@ const Show = React.memo(() => {
 
 			window.object = modelMesh
 			object.current = modelMesh
+
+			if (loadingRef.current) {
+				loadingRef.current()
+				loadingRef.current = null
+			}
 		}
 
 		asyncFunc(model)
@@ -331,7 +341,7 @@ const Show = React.memo(() => {
 	const handleRightClick = useCallback(
 		e => {
 			const {position, intersectObj} = getIntersectObj(e)
-			if (intersectObj) {
+			if (intersectObj && intersectObj.object.parent.name !== 'sensors') {
 				clickPos.current = position
 				intersectPoint.current = intersectObj.point
 				setSensorPickerVisible(true)
