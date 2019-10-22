@@ -123,8 +123,8 @@ const Show = React.memo(() => {
 			camera.current = new THREE.PerspectiveCamera(
 				45,
 				clientWidth / clientHeight,
-				0.001,
-				2000000000
+				0.1,
+				20000000
 			)
 
 			window.scene = scene.current
@@ -286,9 +286,10 @@ const Show = React.memo(() => {
 
 				control.current = new OrbitControls(
 					camera.current,
-					renderer.current.domElement,
-					center.current
+					renderer.current.domElement
 				)
+				control.current.target = center.current
+				control.current.screenSpacePanning = true
 
 				camera.current.position.x = (1 * radius.current) / 1.73205
 				camera.current.position.y = (1.2 * radius.current) / 1.73205 //除以根号3
@@ -457,7 +458,7 @@ const Show = React.memo(() => {
 				<span>单击右键添加传感器</span>
 				<span>双击左键删除传感器</span>
 				<span>左键拖动旋转模型</span>
-				<span>右键拖动移动模型</span>
+				<span>左键+shift 拖动移动模型</span>
 				<span>鼠标滚轮缩放模型</span>
 			</div>
 		</div>
