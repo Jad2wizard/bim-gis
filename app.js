@@ -72,7 +72,8 @@ setSession(app)
 app.use(routers.routes()).use(routers.allowedMethods())
 
 app.use(async ctx => {
-	ctx.response.body = env.render('index.html')
+	const user = ctx.session.username || null
+	ctx.response.body = env.render('index.html', {user: user || ''})
 })
 
 app.listen(config.port)

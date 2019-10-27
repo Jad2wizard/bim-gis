@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux'
 import * as actions from './actions'
 
-const user = (state = null, action) => {
+const user = (state = window.user, action) => {
 	switch (action.type) {
 		case actions.LOGIN_RECEIVE:
 			return action.user.username
