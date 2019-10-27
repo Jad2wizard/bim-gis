@@ -1,1 +1,5 @@
-{"test":{"name":"test","password":"test"},"admin":{"name":"admin","password":"admin"}}
+{
+	"test": {"name": "test", "password": "test"},
+	"admin": {"name": "admin", "password": "admin"},
+	"jad": {"name": "jad", "password": "jad"}
+}

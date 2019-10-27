@@ -9,7 +9,7 @@ import {Provider} from 'react-redux'
 import Home from './Pages/Home'
 import Manage from './Pages/Manage'
 import Show from './Pages/Show'
-import GIS from './Pages/GIS'
+// import GIS from './Pages/GIS'
 import Login from './Pages/Session/Login'
 import Register from './Pages/Session/Register'
 import NotFoundPage from './Pages/NotFoundPage'
@@ -31,7 +31,6 @@ const routes = (
 		<Route path="/" component={props => <Home {...props} />}>
 			<Route path="/manage" component={() => <Manage />} />
 			<Route path="/show" component={() => <Show />} />
-			<Route path="/map" component={() => <GIS />} />
 			<Route path="/help" component={() => <div>帮助</div>} />
 			<Route path="/404" component={() => <NotFoundPage />} />
 			<Redirect from="*" to="/404" />
