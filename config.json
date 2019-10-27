@@ -1,4 +1,4 @@
 {
-  "hotUpdate": true,
-  "port": 3001
+	"hotUpdate": false,
+	"port": 3001
 }

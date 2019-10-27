@@ -26,6 +26,7 @@ const defaultModelColor = '#888'
 const zeroPoint = new THREE.Vector3(0, 0, 0)
 const rayCaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
+// const rotateDecay = 2 // Orbitcontrol rotateSpeed 随摄像机到中心点距离的衰减比例
 
 const loadObj = url =>
 	new Promise((resolve, reject) => {
@@ -85,6 +86,7 @@ const Show = React.memo(() => {
 	const mixers = useRef([])
 	const clock = useRef(null)
 	const loadingRef = useRef(null)
+	// const camDistanceRef = useRef(0)
 
 	useEffect(() => {
 		if (!modelId) return
@@ -290,10 +292,13 @@ const Show = React.memo(() => {
 				)
 				control.current.target = center.current
 				control.current.screenSpacePanning = true
+				window.control = control.current
 
 				camera.current.position.x = (1 * radius.current) / 1.73205
 				camera.current.position.y = (1.2 * radius.current) / 1.73205 //除以根号3
 				camera.current.position.z = (1 * radius.current) / 1.73205
+
+				// camDistanceRef.current = camera.current.position.distanceTo(center.current)
 
 				pointLight.current.position.x = 1 * radius.current
 				pointLight.current.position.y = 1 * radius.current

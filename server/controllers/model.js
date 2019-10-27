@@ -2,7 +2,18 @@ const fs = require('fs')
 const path = require('path')
 const moment = require('moment')
 const unzip = require('unzip')
-const {rmdirSync} = require('jadwizard-lib')
+
+const rmdirSync = dir => {
+	const fileinfo = fs.statSync(dir)
+	if (fileinfo.isFile()) {
+		fs.unlinkSync(dir)
+	} else if (fileinfo.isDirectory()) {
+		const files = fs.readdirSync(dir)
+		for (let i = 0; i < files.length; i++)
+			rmdirSync(path.join(dir, files[i]))
+		fs.rmdirSync(dir)
+	}
+}
 
 const modelTempStoreRoot = path.resolve(__dirname, './../../res/data/models')
 
@@ -148,9 +159,57 @@ const updateModel = async ctx => {
 	}
 }
 
+const getMarker = async ctx => {
+	try {
+		const {modelId, markerId} = ctx.params
+		if (!modelId) throw '缺少标记所属的模型id'
+		console.log(modelId)
+		console.log(markerId)
+	} catch (e) {
+		ctx.response.body = {message: e.toString()}
+		ctx.status = 400
+	}
+}
+
+const addMarker = async ctx => {
+	try {
+		const {modelId} = ctx.params
+		if (!modelId) throw '缺少标记所属的模型id'
+	} catch (e) {
+		ctx.response.body = {message: e.toString()}
+		ctx.status = 400
+	}
+}
+
+const delMarker = async ctx => {
+	try {
+		const {modelId, markderId} = ctx.params
+		if (!modelId) throw '缺少标记所属的模型id'
+		if (!markderId) throw '缺少标记id'
+	} catch (e) {
+		ctx.response.body = {message: e.toString()}
+		ctx.status = 400
+	}
+}
+
+const updateMarker = async ctx => {
+	try {
+		const {modelId, markerId} = ctx.params
+		if (!modelId) throw '缺少标记所属的模型id'
+		if (!markderId) throw '缺少标记id'
+	} catch (e) {
+		ctx.response.body = {message: e.toString()}
+		ctx.status = 400
+	}
+}
+
 module.exports = {
 	getModel,
 	addModel,
 	delModel,
-	updateModel
+	updateModel,
+	getMarker,
+	addMarker,
+	delMarker,
+	updateMarker
 }
