@@ -46,6 +46,9 @@ const setSession = app => {
 						ctx.response.redirect(
 							`/login?nextUrl=${encodeURIComponent(ctx.path)}`
 						)
+					} else {
+						ctx.session.username = username
+						await next()
 					}
 				} else {
 					ctx.response.redirect(
@@ -57,9 +60,9 @@ const setSession = app => {
 					`/login?nextUrl=${encodeURIComponent(ctx.path)}`
 				)
 			}
+		} else {
+			await next()
 		}
-		ctx.session.username = username
-		await next()
 	})
 }
 
@@ -73,6 +76,12 @@ const login = async ctx => {
 		if (!user) throw new Error('该用户不存在')
 		if (user.password != password) throw new Error('密码错误')
 
+		console.log(MAX_AGE)
+		console.log(
+			moment()
+				.add(MAX_AGE, 'second')
+				.format('YYYY-MM-DD HH:mm:ss')
+		)
 		const sessionId =
 			user.name +
 			'_' +

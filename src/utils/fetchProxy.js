@@ -1,3 +1,6 @@
+import {routerActions} from 'react-router-redux'
+import store from './../store'
+
 const doFetch = (url, param = {}) => {
 	let method = param.method || 'get'
 	let headers = {
@@ -38,6 +41,14 @@ const doFetch = (url, param = {}) => {
 const fetchProxy = async (url, param) => {
 	try {
 		const res = await doFetch(url, param)
+
+		if (res.redirected) {
+			store.dispatch(
+				routerActions.push('/login' + res.url.split('/login')[1])
+			)
+			return ''
+		}
+
 		const data = await res.json()
 		if (!res.ok) throw data.message
 		return data

@@ -41,13 +41,23 @@ module.exports = (env, argv) => {
 				},
 				{
 					test: /\.(css)/,
-					loader:
-						'style-loader!css-loader?modules&localIdentName=[path][name]--[local]--[hash:base64:5]'
+					loader: 'style-loader!css-loader'
 				},
 				{
 					test: /\.(less)/,
-					loader:
-						'style-loader!css-loader?modules&localIdentName=[path][name]--[local]--[hash:base64:5]!less-loader'
+					use: [
+						'style-loader',
+						{
+							loader: 'css-loader',
+							options: {
+								modules: true,
+								context: __dirname,
+								localIdentName:
+									'[path][name]--[local]--[hash:base64:5]'
+							}
+						},
+						'less-loader'
+					]
 				},
 				{
 					test: /\.(png|jpg)/,

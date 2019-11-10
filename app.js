@@ -72,7 +72,7 @@ setSession(app)
 app.use(routers.routes()).use(routers.allowedMethods())
 
 app.use(async ctx => {
-	const user = ctx.session.username || null
+	const user = ctx.session ? ctx.session.username || null : null
 	ctx.response.body = env.render('index.html', {user: user || ''})
 })
 

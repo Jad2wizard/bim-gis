@@ -30,6 +30,16 @@ const ModelUpload = props => {
 		})
 	}, [])
 
+	const handlePosChange = useCallback(pos => {
+		positionRef.current.lng = pos.lng
+		positionRef.current.lat = pos.lat
+		setMapVisible(false)
+	}, [])
+
+	const handleHiddenPosPicker = useCallback(() => {
+		setMapVisible(false)
+	}, [])
+
 	const handleSubmit = useCallback(() => {
 		validateFields((err, values) => {
 			if (!err) {
@@ -86,16 +96,6 @@ const ModelUpload = props => {
 				))}
 			</React.Fragment>
 		)
-	}, [])
-
-	const handlePosChange = useCallback(pos => {
-		positionRef.current.lng = pos.lng
-		positionRef.current.lat = pos.lat
-		setMapVisible(false)
-	}, [])
-
-	const handleHiddenPosPicker = useCallback(() => {
-		setMapVisible(false)
 	}, [])
 
 	return (

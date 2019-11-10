@@ -50,13 +50,17 @@ function* addModel(model) {
 
 function* updateModel(params) {
 	try {
-		yield fetchProxy('/model/' + params.id, {
+		const res = yield fetchProxy('/model/' + params.id, {
 			method: 'PUT',
 			payload: params,
 			contentType: 'application/json'
 		})
-		yield put(actions.updateModel('receive', {params}))
-		message.success('更新成功')
+		if (res) {
+			yield put(actions.updateModel('receive', {params}))
+			message.success('更新成功')
+		} else {
+			throw res
+		}
 	} catch (e) {
 		message.error(e.toString())
 		yield put(actions.updateModel('error', {error: e.toString()}))
