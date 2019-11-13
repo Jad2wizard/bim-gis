@@ -1,4 +1,4 @@
-const MAX_AGE = 10 //秒
+const MAX_AGE = 60 * 60 //秒
 const ignorePath = ['/__webpack_hmr', '/favicon.ico', '/login', 'logout']
 const ignoreFuzzyPath = ['hot-update', '/record-file', '/register']
 const sessionConfig = {

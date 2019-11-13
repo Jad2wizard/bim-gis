@@ -1,12 +1,14 @@
 const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
+// const BundleAnalyzer = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const {port} = JSON.parse(fs.readFileSync('./config.json'))
 console.log(port)
 
 module.exports = (env, argv) => {
 	const isDev = argv.mode === 'development'
 	const config = {
+		context: __dirname,
 		entry: {
 			main: isDev
 				? [
@@ -35,9 +37,7 @@ module.exports = (env, argv) => {
 				{
 					test: /\.js$/,
 					exclude: /node_modules/,
-					use: {
-						loader: 'babel-loader'
-					}
+					loader: 'babel-loader'
 				},
 				{
 					test: /\.(css)/,
@@ -88,6 +88,7 @@ module.exports = (env, argv) => {
 		config.plugins.push(new webpack.HotModuleReplacementPlugin())
 	} else {
 		config.mode = 'production'
+		// config.plugins.push(new BundleAnalyzer())
 	}
 	return config
 }
