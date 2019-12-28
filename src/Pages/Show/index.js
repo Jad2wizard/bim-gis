@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
-import {message} from 'antd'
+import {message, Icon} from 'antd'
 import moment from 'moment'
 import elementResizeEvent from 'element-resize-event'
 import * as THREE from 'three'
@@ -10,11 +10,12 @@ import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader'
 import {STLLoader} from 'three/examples/jsm/loaders/STLLoader'
 import {FBXLoader} from 'three/examples/jsm/loaders/FBXLoader'
 import {
-	CSS2DRenderer,
-	CSS2DObject
+    CSS2DRenderer,
+    CSS2DObject
 } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import {updateModel} from './../Manage/actions'
-import {SENSOR_LIST} from './../../utils'
+import {fetchDeviceCodes} from './actions'
+import SensorUpload from './sensorUpload'
 import styles from './index.less'
 
 window.THREE = THREE
@@ -29,471 +30,478 @@ const mouse = new THREE.Vector2()
 // const rotateDecay = 2 // Orbitcontrol rotateSpeed 随摄像机到中心点距离的衰减比例
 
 const loadObj = url =>
-	new Promise((resolve, reject) => {
-		ObjLoader.load(url, obj => resolve(obj), () => {}, err => reject(err))
-	})
+    new Promise((resolve, reject) => {
+        ObjLoader.load(url, obj => resolve(obj), () => {}, err => reject(err))
+    })
 
 const loadMtl = url =>
-	new Promise((resolve, reject) => {
-		MtlLoader.load(url, mtl => resolve(mtl), () => {}, err => reject(err))
-	})
+    new Promise((resolve, reject) => {
+        MtlLoader.load(url, mtl => resolve(mtl), () => {}, err => reject(err))
+    })
 
 const loadStl = url =>
-	new Promise((resolve, reject) => {
-		StlLoader.load(
-			url,
-			geometry => {
-				resolve(geometry)
-			},
-			() => {},
-			err => reject(err)
-		)
-	})
+    new Promise((resolve, reject) => {
+        StlLoader.load(
+            url,
+            geometry => {
+                resolve(geometry)
+            },
+            () => {},
+            err => reject(err)
+        )
+    })
 
 const loadFbx = url =>
-	new Promise((resolve, reject) => {
-		FbxLoader.load(
-			url,
-			object => {
-				resolve(object)
-			},
-			() => {},
-			err => reject(err)
-		)
-	})
+    new Promise((resolve, reject) => {
+        FbxLoader.load(
+            url,
+            object => {
+                resolve(object)
+            },
+            () => {},
+            err => reject(err)
+        )
+    })
 
 const Show = React.memo(() => {
-	const dispatch = useDispatch()
+    const dispatch = useDispatch()
 
-	const [model, setModel] = useState(null)
-	const [container, setContainer] = useState(null)
-	const [sensorPickerVisible, setSensorPickerVisible] = useState(false)
+    const [model, setModel] = useState(null)
+    const [container, setContainer] = useState(null)
+    const [sensorUploadVisible, setSensorUploadVisible] = useState(false)
 
-	const modelId = location.search.split('id=')[1]
-	const modelList = useSelector(state => state.manageState.modelList)
+    const modelId = location.search.split('id=')[1]
+    const modelList = useSelector(state => state.manageState.modelList)
 
-	const clickPos = useRef({x: 0, y: 0})
-	const intersectPoint = useRef(null)
-	const renderer = useRef(null)
-	const labelRendererRef = useRef(null)
-	const scene = useRef(null)
-	const camera = useRef(null)
-	const control = useRef(null)
-	const center = useRef(zeroPoint)
-	const radius = useRef(0)
-	const pointLight = useRef(null)
-	const object = useRef(null)
-	const mixers = useRef([])
-	const clock = useRef(null)
-	const loadingRef = useRef(null)
-	// const camDistanceRef = useRef(0)
+    const intersectPoint = useRef(null)
+    const renderer = useRef(null)
+    const labelRendererRef = useRef(null)
+    const scene = useRef(null)
+    const camera = useRef(null)
+    const control = useRef(null)
+    const center = useRef(zeroPoint)
+    const radius = useRef(0)
+    const pointLight = useRef(null)
+    const object = useRef(null)
+    const mixers = useRef([])
+    const clock = useRef(null)
+    const loadingRef = useRef(null)
 
-	useEffect(() => {
-		if (!modelId) return
-		const model = modelList.find(m => m.id === modelId)
-		setModel(model)
-	}, [modelList])
+    useEffect(() => {
+        if (modelId) {
+            dispatch(fetchDeviceCodes('request', {modelId: modelId}))
+        }
+    }, [modelId, dispatch])
 
-	const containerRef = useCallback(node => {
-		if (node) setContainer(node)
-	}, [])
+    useEffect(() => {
+        if (!modelId) return
+        const model = modelList.find(m => m.id === modelId)
+        setModel(model)
+    }, [modelList, setModel, modelId])
 
-	useEffect(() => {
-		async function init() {
-			if (!container || !model || scene.current) return
+    const containerRef = useCallback(node => {
+        if (node) setContainer(node)
+    }, [])
 
-			if (!loadingRef.current)
-				loadingRef.current = message.loading('正在加载模型', 0)
+    useEffect(() => {
+        async function init() {
+            if (!container || !model || scene.current) return
 
-			const {clientWidth, clientHeight} = container
+            if (!loadingRef.current)
+                loadingRef.current = message.loading('正在加载模型', 0)
 
-			clock.current = new THREE.Clock()
+            const {clientWidth, clientHeight} = container
 
-			scene.current = new THREE.Scene()
+            clock.current = new THREE.Clock()
 
-			const planeMesh = new THREE.Mesh(
-				new THREE.PlaneBufferGeometry(100000, 100000),
-				new THREE.MeshLambertMaterial({
-					color: 0xdddddd,
-					depthWrite: false
-				})
-			)
-			planeMesh.rotation.x = -Math.PI / 2
-			planeMesh.receiveShadow = true
-			scene.current.add(planeMesh)
+            scene.current = new THREE.Scene()
 
-			camera.current = new THREE.PerspectiveCamera(
-				45,
-				clientWidth / clientHeight,
-				0.1,
-				20000000
-			)
+            const planeMesh = new THREE.Mesh(
+                new THREE.PlaneBufferGeometry(100000, 100000),
+                new THREE.MeshLambertMaterial({
+                    color: 0xdddddd,
+                    depthWrite: false
+                })
+            )
+            planeMesh.rotation.x = -Math.PI / 2
+            planeMesh.receiveShadow = true
+            scene.current.add(planeMesh)
 
-			window.scene = scene.current
-			window.camera = camera.current
+            camera.current = new THREE.PerspectiveCamera(
+                45,
+                clientWidth / clientHeight,
+                0.1,
+                20000000
+            )
 
-			renderer.current = new THREE.WebGLRenderer({
-				antialias: true
-			})
-			renderer.current.setClearColor(0xffffff, 1.0)
-			renderer.current.setPixelRatio(window.devicePixelRatio)
-			renderer.current.setSize(clientWidth, clientHeight)
-			renderer.current.autoClear = true
+            window.scene = scene.current
+            window.camera = camera.current
 
-			const labelRenderer = new CSS2DRenderer()
-			labelRenderer.setSize(clientWidth, clientHeight)
-			labelRendererRef.current = labelRenderer
+            renderer.current = new THREE.WebGLRenderer({
+                antialias: true
+            })
+            renderer.current.setClearColor(0xffffff, 1.0)
+            renderer.current.setPixelRatio(window.devicePixelRatio)
+            renderer.current.setSize(clientWidth, clientHeight)
+            renderer.current.autoClear = true
 
-			labelRenderer.domElement.style.position = 'absolute'
-			labelRenderer.domElement.style.top = 0
-			container.appendChild(labelRenderer.domElement)
-			renderer.current.domElement.style.position = 'absolute'
-			renderer.current.domElement.style.top = 0
-			container.appendChild(renderer.current.domElement)
+            const labelRenderer = new CSS2DRenderer()
+            labelRenderer.setSize(clientWidth, clientHeight)
+            labelRendererRef.current = labelRenderer
 
-			elementResizeEvent(container, handleResize)
+            labelRenderer.domElement.style.position = 'absolute'
+            labelRenderer.domElement.style.top = 0
+            container.appendChild(labelRenderer.domElement)
+            renderer.current.domElement.style.position = 'absolute'
+            renderer.current.domElement.style.top = 0
+            container.appendChild(renderer.current.domElement)
 
-			animate()
+            elementResizeEvent(container, handleResize)
 
-			await loadModel(model)
+            animate()
 
-			initLight()
-		}
+            await loadModel(model)
 
-		init()
-	}, [container, model])
+            initLight()
+        }
 
-	const initLight = useCallback(() => {
-		const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
-		scene.current.add(ambientLight)
+        init()
+    }, [container, model])
 
-		pointLight.current = new THREE.PointLight(0xffffff, 0.8)
-		camera.current.add(pointLight.current)
-		scene.current.add(camera.current)
+    const initLight = useCallback(() => {
+        const ambientLight = new THREE.AmbientLight(0xcccccc, 0.4)
+        scene.current.add(ambientLight)
 
-		if (object.current) {
-			const dLight = new THREE.DirectionalLight('#fff')
-			dLight.target = object.current
-			dLight.position.set(1, 1, 1)
-			scene.current.add(dLight)
-		}
-	}, [])
+        pointLight.current = new THREE.PointLight(0xffffff, 0.8)
+        camera.current.add(pointLight.current)
+        scene.current.add(camera.current)
 
-	const handleResize = useCallback(() => {
-		const {clientWidth, clientHeight} = container
+        if (object.current) {
+            const dLight = new THREE.DirectionalLight('#fff')
+            dLight.target = object.current
+            dLight.position.set(1, 1, 1)
+            scene.current.add(dLight)
+        }
+    }, [])
 
-		camera.current.aspect = clientWidth / clientHeight
-		camera.current.updateProjectionMatrix()
+    const handleResize = useCallback(() => {
+        const {clientWidth, clientHeight} = container
 
-		renderer.current.setSize(clientWidth, clientHeight)
-		labelRendererRef.current.setSize(clientWidth, clientHeight)
-	}, [container])
+        camera.current.aspect = clientWidth / clientHeight
+        camera.current.updateProjectionMatrix()
 
-	const animate = useCallback(() => {
-		requestAnimationFrame(animate)
-		render()
-	}, [])
+        renderer.current.setSize(clientWidth, clientHeight)
+        labelRendererRef.current.setSize(clientWidth, clientHeight)
+    }, [container])
 
-	const render = useCallback(() => {
-		if (mixers.current.length > 0) {
-			for (let i = 0; i < mixers.current.length; i++) {
-				mixers.current[i].update(clock.current.getDelta())
-			}
-		}
+    const animate = useCallback(() => {
+        requestAnimationFrame(animate)
+        render()
+    }, [])
 
-		camera.current.lookAt(center.current)
-		if (control.current) control.current.update()
+    const render = useCallback(() => {
+        if (mixers.current.length > 0) {
+            for (let i = 0; i < mixers.current.length; i++) {
+                mixers.current[i].update(clock.current.getDelta())
+            }
+        }
 
-		renderer.current.render(scene.current, camera.current)
-		labelRendererRef.current.render(scene.current, camera.current)
-	}, [])
+        camera.current.lookAt(center.current)
+        if (control.current) control.current.update()
 
-	const loadModel = useCallback(model => {
-		const asyncFunc = async model => {
-			let modelMesh = null
-			switch (model.type) {
-				case 'obj': {
-					if (model.mtlFile) {
-						const material = await loadMtl(model.mtlFile)
-						material.preload()
-						ObjLoader.setMaterials(material)
-					}
+        renderer.current.render(scene.current, camera.current)
+        labelRendererRef.current.render(scene.current, camera.current)
+    }, [])
 
-					const modelObj = await loadObj(model.objFile)
-					for (let c of modelObj.children) {
-						if (!c.material.color) continue
-						const {r, g, b} = c.material.color
-						if (r + g + b === 0) {
-							c.material.color = new THREE.Color(
-								defaultModelColor
-							)
-						}
-					}
-					modelMesh = modelObj
-					break
-				}
-				case 'stl': {
-					const stlGeo = await loadStl(model.stlFile)
-					const stlMesh = new THREE.Mesh(
-						stlGeo,
-						new THREE.MeshPhongMaterial({
-							color: 0x999999,
-							specular: 0x111111,
-							shininess: 200
-						})
-					)
-					modelMesh = stlMesh
-					break
-				}
-				case 'fbx': {
-					const fbxMesh = await loadFbx(model.fbxFile)
+    const loadModel = useCallback(model => {
+        const asyncFunc = async model => {
+            let modelMesh = null
+            switch (model.type) {
+                case 'obj': {
+                    if (model.mtlFile) {
+                        const material = await loadMtl(model.mtlFile)
+                        material.preload()
+                        ObjLoader.setMaterials(material)
+                    }
 
-					fbxMesh.mixer = new THREE.AnimationMixer(fbxMesh)
-					mixers.current.push(fbxMesh.mixer)
-					const action = fbxMesh.mixer.clipAction(
-						fbxMesh.animations[0]
-					)
-					action.play()
+                    const modelObj = await loadObj(model.objFile)
+                    for (let c of modelObj.children) {
+                        if (!c.material.color) continue
+                        const {r, g, b} = c.material.color
+                        if (r + g + b === 0) {
+                            c.material.color = new THREE.Color(
+                                defaultModelColor
+                            )
+                        }
+                    }
+                    modelMesh = modelObj
+                    break
+                }
+                case 'stl': {
+                    const stlGeo = await loadStl(model.stlFile)
+                    const stlMesh = new THREE.Mesh(
+                        stlGeo,
+                        new THREE.MeshPhongMaterial({
+                            color: 0x999999,
+                            specular: 0x111111,
+                            shininess: 200
+                        })
+                    )
+                    modelMesh = stlMesh
+                    break
+                }
+                case 'fbx': {
+                    const fbxMesh = await loadFbx(model.fbxFile)
 
-					for (let c of fbxMesh.children) {
-						if (!c.material || !c.material.color) continue
-						c.material.color = new THREE.Color(defaultModelColor)
-					}
-					modelMesh = fbxMesh
-					break
-				}
-				default:
-					break
-			}
-			if (modelMesh) {
-				scene.current.add(modelMesh)
+                    fbxMesh.mixer = new THREE.AnimationMixer(fbxMesh)
+                    mixers.current.push(fbxMesh.mixer)
+                    const action = fbxMesh.mixer.clipAction(
+                        fbxMesh.animations[0]
+                    )
+                    action.play()
 
-				const boundingBox = new THREE.Box3()
-				boundingBox.expandByObject(modelMesh)
-				const {min, max} = boundingBox
+                    for (let c of fbxMesh.children) {
+                        if (!c.material || !c.material.color) continue
+                        c.material.color = new THREE.Color(defaultModelColor)
+                    }
+                    modelMesh = fbxMesh
+                    break
+                }
+                default:
+                    break
+            }
+            if (modelMesh) {
+                scene.current.add(modelMesh)
 
-				center.current = new THREE.Vector3(
-					(max.x - min.x) / 2 + min.x,
-					(max.y - min.y) / 2 + min.y,
-					(max.z - min.z) / 2 + min.z
-				)
+                const boundingBox = new THREE.Box3()
+                boundingBox.expandByObject(modelMesh)
+                const {min, max} = boundingBox
 
-				radius.current = Math.max(
-					max.x - min.x,
-					max.y - min.y,
-					max.z - min.z
-				)
+                center.current = new THREE.Vector3(
+                    (max.x - min.x) / 2 + min.x,
+                    (max.y - min.y) / 2 + min.y,
+                    (max.z - min.z) / 2 + min.z
+                )
 
-				renderSensors(model.sensors)
+                radius.current = Math.max(
+                    max.x - min.x,
+                    max.y - min.y,
+                    max.z - min.z
+                )
 
-				control.current = new OrbitControls(
-					camera.current,
-					renderer.current.domElement
-				)
-				control.current.target = center.current
-				control.current.screenSpacePanning = true
-				window.control = control.current
+                renderSensors(model.sensors)
 
-				camera.current.position.x = (1 * radius.current) / 1.73205
-				camera.current.position.y = (1.2 * radius.current) / 1.73205 //除以根号3
-				camera.current.position.z = (1 * radius.current) / 1.73205
+                control.current = new OrbitControls(
+                    camera.current,
+                    renderer.current.domElement
+                )
+                control.current.target = center.current
+                control.current.screenSpacePanning = true
+                window.control = control.current
 
-				// camDistanceRef.current = camera.current.position.distanceTo(center.current)
+                camera.current.position.x = (1 * radius.current) / 1.73205
+                camera.current.position.y = (1.2 * radius.current) / 1.73205 //除以根号3
+                camera.current.position.z = (1 * radius.current) / 1.73205
 
-				pointLight.current.position.x = 1 * radius.current
-				pointLight.current.position.y = 1 * radius.current
-				pointLight.current.position.z = 1 * radius.current
-			}
+                // camDistanceRef.current = camera.current.position.distanceTo(center.current)
 
-			window.object = modelMesh
-			object.current = modelMesh
+                pointLight.current.position.x = 1 * radius.current
+                pointLight.current.position.y = 1 * radius.current
+                pointLight.current.position.z = 1 * radius.current
+            }
 
-			if (loadingRef.current) {
-				loadingRef.current()
-				loadingRef.current = null
-			}
-		}
+            window.object = modelMesh
+            object.current = modelMesh
 
-		asyncFunc(model)
-	}, [])
+            if (loadingRef.current) {
+                loadingRef.current()
+                loadingRef.current = null
+            }
+        }
 
-	const getIntersectObj = useCallback(
-		e => {
-			const {clientX, clientY} = e
-			const {offsetWidth, offsetHeight} = container
-			const x = clientX - e.target.parentElement.offsetLeft
-			const y = clientY - e.target.parentElement.offsetTop
-			mouse.x = (x / offsetWidth) * 2 - 1
-			mouse.y = 1 - (y / offsetHeight) * 2
+        asyncFunc(model)
+    }, [])
 
-			rayCaster.setFromCamera(mouse, camera.current)
+    const getIntersectObj = useCallback(
+        e => {
+            const {clientX, clientY} = e
+            const {offsetWidth, offsetHeight} = container
+            const x = clientX - e.target.parentElement.offsetLeft
+            const y = clientY - e.target.parentElement.offsetTop
+            mouse.x = (x / offsetWidth) * 2 - 1
+            mouse.y = 1 - (y / offsetHeight) * 2
 
-			const intersects = rayCaster.intersectObjects(
-				scene.current.children,
-				true
-			)
-			if (intersects.length > 0) {
-				return {
-					position: {x, y},
-					intersectObj: intersects[0]
-				}
-			}
+            rayCaster.setFromCamera(mouse, camera.current)
 
-			return {}
-		},
-		[container]
-	)
+            const intersects = rayCaster.intersectObjects(
+                scene.current.children,
+                true
+            )
+            if (intersects.length > 0) {
+                return {
+                    intersectObj: intersects[0]
+                }
+            }
 
-	const handleRightClick = useCallback(
-		e => {
-			const {position, intersectObj} = getIntersectObj(e)
-			if (intersectObj && intersectObj.object.parent.name !== 'sensors') {
-				clickPos.current = position
-				intersectPoint.current = intersectObj.point
-				setSensorPickerVisible(true)
-			}
-		},
-		[container]
-	)
+            return {}
+        },
+        [container]
+    )
 
-	const handleDeleteSensor = useCallback(
-		e => {
-			const {intersectObj} = getIntersectObj(e)
-			if (intersectObj && intersectObj.object.parent.name === 'sensors') {
-				const {sensors} = model
-				const index = sensors.findIndex(
-					s => s.id === intersectObj.object.name
-				)
-				sensors.splice(index, 1)
-				dispatch(
-					updateModel('request', {
-						params: {
-							id: model.id,
-							sensors
-						}
-					})
-				)
-			}
-		},
-		[container, model]
-	)
+    const handleRightClick = useCallback(
+        e => {
+            const {intersectObj} = getIntersectObj(e)
+            if (intersectObj && intersectObj.object.parent.name !== 'sensors') {
+                intersectPoint.current = intersectObj.point
+                setSensorUploadVisible(true)
+            }
+        },
+        [container]
+    )
 
-	const handleSensorAdd = useCallback(
-		sensorType => {
-			if (!container || !scene.current || !camera.current) return
-			dispatch(
-				updateModel('request', {
-					params: {
-						id: model.id,
-						sensors: [
-							...model.sensors,
-							{
-								id: moment().valueOf() + '_sensor',
-								type: sensorType,
-								position: {...intersectPoint.current}
-							}
-						]
-					}
-				})
-			)
-			setSensorPickerVisible(false)
-		},
-		[container, model]
-	)
+    const handleDeleteSensor = useCallback(
+        e => {
+            const {intersectObj} = getIntersectObj(e)
+            if (intersectObj && intersectObj.object.parent.name === 'sensors') {
+                const {sensors} = model
+                const index = sensors.findIndex(
+                    s => s.id === intersectObj.object.name
+                )
+                sensors.splice(index, 1)
+                dispatch(
+                    updateModel('request', {
+                        params: {
+                            id: model.id,
+                            sensors
+                        }
+                    })
+                )
+            }
+        },
+        [container, model]
+    )
 
-	const handleHiddenSensorPicker = useCallback(() => {
-		setSensorPickerVisible(false)
-	}, [])
+    const handleSensorAdd = useCallback(
+        ({type, deviceCode}) => {
+            if (!container || !scene.current || !camera.current) return
+            dispatch(
+                updateModel('request', {
+                    params: {
+                        id: model.id,
+                        sensors: [
+                            ...model.sensors,
+                            {
+                                id: moment().valueOf() + '_sensor',
+                                type,
+                                deviceCode,
+                                position: {...intersectPoint.current}
+                            }
+                        ]
+                    }
+                })
+            )
+            setSensorUploadVisible(false)
+        },
+        [container, model]
+    )
 
-	//draw sensors
-	useEffect(() => {
-		if (!container || !scene.current || !model) return
-		renderSensors(model.sensors)
-	}, [model, container])
+    const handleHiddenSensorUpload = useCallback(() => {
+        setSensorUploadVisible(false)
+    }, [])
 
-	const renderSensors = useCallback(sensors => {
-		let sensorsGroup = scene.current.getChildByName('sensors')
-		if (sensorsGroup) scene.current.remove(sensorsGroup)
-		const labelDomList = labelRendererRef.current.domElement.querySelectorAll(
-			'*'
-		)
-		for (let dom of labelDomList)
-			labelRendererRef.current.domElement.removeChild(dom)
+    //draw sensors
+    useEffect(() => {
+        if (!container || !scene.current || !model) return
+        renderSensors(model.sensors)
+    }, [model, container])
 
-		sensorsGroup = new THREE.Group()
-		sensorsGroup.name = 'sensors'
-		scene.current.add(sensorsGroup)
+    const sensorTypes = useSelector(state => state.modelState.sensorTypes)
+    const renderSensors = useCallback(sensors => {
+        let sensorsGroup = scene.current.getChildByName('sensors')
+        if (sensorsGroup) scene.current.remove(sensorsGroup)
+        const labelDomList = labelRendererRef.current.domElement.querySelectorAll(
+            '*'
+        )
+        for (let dom of labelDomList)
+            labelRendererRef.current.domElement.removeChild(dom)
 
-		for (let s of sensors) {
-			const sc = SENSOR_LIST.find(sc => sc.id === s.type)
-			if (sc) {
-				const tmpMesh = sc.mesh.clone()
-				const scale = radius.current / 150
-				const {x, y, z} = s.position
-				tmpMesh.position.x = x
-				tmpMesh.position.y = y
-				tmpMesh.position.z = z
-				tmpMesh.scale.x = scale
-				tmpMesh.scale.y = scale
-				tmpMesh.scale.z = scale
-				tmpMesh.name = s.id
+        sensorsGroup = new THREE.Group()
+        sensorsGroup.name = 'sensors'
+        scene.current.add(sensorsGroup)
 
-				const label = genLabel(sc.name)
-				tmpMesh.add(label)
-				sensorsGroup.add(tmpMesh)
-			}
-		}
-	}, [])
+        for (let s of sensors) {
+            const sc = sensorTypes.find(sc => sc.id === s.type)
+            if (sc) {
+                const tmpMesh = sc.mesh.clone()
+                const scale = radius.current / 150
+                const {x, y, z} = s.position
+                tmpMesh.position.x = x
+                tmpMesh.position.y = y
+                tmpMesh.position.z = z
+                tmpMesh.scale.x = scale
+                tmpMesh.scale.y = scale
+                tmpMesh.scale.z = scale
+                tmpMesh.name = s.id
 
-	return (
-		<div
-			ref={containerRef}
-			className={styles.container}
-			onContextMenu={handleRightClick}
-			onClick={handleHiddenSensorPicker}
-			onDoubleClick={handleDeleteSensor}>
-			{sensorPickerVisible && (
-				<SensorPicker
-					top={clickPos.current.y}
-					left={clickPos.current.x}
-					onClick={handleSensorAdd}
-				/>
-			)}
-			<div className={styles.tip}>
-				<span>单击右键添加传感器</span>
-				<span>双击左键删除传感器</span>
-				<span>左键拖动旋转模型</span>
-				<span>左键+shift 拖动移动模型</span>
-				<span>鼠标滚轮缩放模型</span>
-			</div>
-		</div>
-	)
+                const label = genLabel(sc.name)
+                tmpMesh.add(label)
+                sensorsGroup.add(tmpMesh)
+            }
+        }
+    }, [])
+
+    return (
+        <div
+            ref={containerRef}
+            className={styles.container}
+            onContextMenu={handleRightClick}
+            onClick={handleHiddenSensorUpload}
+            onDoubleClick={handleDeleteSensor}>
+            {sensorUploadVisible && (
+                <SensorUpload
+                    onSave={handleSensorAdd}
+                    onCancel={handleHiddenSensorUpload}
+                />
+            )}
+            <Tip />
+        </div>
+    )
 })
 
 const genLabel = content => {
-	const labelDiv = document.createElement('div')
-	labelDiv.className = styles.label
-	labelDiv.textContent = content
+    const labelDiv = document.createElement('div')
+    labelDiv.className = styles.label
+    labelDiv.textContent = content
 
-	const label = new CSS2DObject(labelDiv)
+    const label = new CSS2DObject(labelDiv)
 
-	return label
+    return label
 }
 
-const SensorPicker = React.memo(({top, left, onClick}) => {
-	return (
-		<div className={styles.sensor} style={{top, left}}>
-			{SENSOR_LIST.map(s => (
-				<span
-					key={s.id}
-					onClick={e => {
-						e.stopPropagation()
-						onClick(s.id)
-					}}>
-					{s.name}
-				</span>
-			))}
-		</div>
-	)
-})
+const Tip = () => {
+    const [collapsed, setCollapse] = useState(false)
+
+    const collapse = useCallback(() => {
+        setCollapse(collapsed => !collapsed)
+    }, [])
+
+    return (
+        <div className={styles.tip} style={{right: collapsed ? -165 : 10}}>
+            <Icon
+                type={collapsed ? 'left-circle' : 'right-circle'}
+                onClick={collapse}
+            />
+            <div
+                className={styles.tipBody}
+                style={{opacity: collapsed ? 0 : 1}}>
+                <span>单击右键添加传感器</span>
+                <span>双击左键删除传感器</span>
+                <span>左键拖动旋转模型</span>
+                <span>左键+shift 拖动移动模型</span>
+                <span>鼠标滚轮缩放模型</span>
+            </div>
+        </div>
+    )
+}
+
 export default Show

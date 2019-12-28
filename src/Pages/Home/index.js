@@ -7,21 +7,21 @@ import Navigator from './Navigator'
 import styles from './index.less'
 
 const Home = React.memo(props => {
-	const dispatch = useDispatch()
+    const dispatch = useDispatch()
 
-	useEffect(() => {
-		dispatch(getModel('request', {}))
-	}, [])
+    useEffect(() => {
+        dispatch(getModel('request', {}))
+    }, [dispatch])
 
-	return (
-		<Layout className={styles.container}>
-			<Header className={styles.header} />
-			<Navigator className={styles.nav} />
-			<Layout.Content className={styles.content}>
-				{props.children}
-			</Layout.Content>
-		</Layout>
-	)
+    return (
+        <Layout className={styles.container}>
+            <Header className={styles.header} />
+            <Navigator className={styles.nav} />
+            <Layout.Content className={styles.content}>
+                {props.children}
+            </Layout.Content>
+        </Layout>
+    )
 })
 
 export default Home

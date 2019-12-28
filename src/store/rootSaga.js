@@ -3,10 +3,11 @@
  * Created by yaojia on 2019/4/13.
  */
 
-import { all, call } from 'redux-saga/effects'
+import {all, call} from 'redux-saga/effects'
 import sessionSagas from './../Pages/Session/sagas'
 import ManageSagas from './../Pages/Manage/sagas'
+import modelSagas from './../Pages/Show/sagas'
 
 export default function*() {
-    yield all([call(sessionSagas), call(ManageSagas)])
+    yield all([call(sessionSagas), call(ManageSagas), call(modelSagas)])
 }

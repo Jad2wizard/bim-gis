@@ -1,32 +1,28 @@
 {
-  "env": {
-    "browser": true,
-    "es6": true
-  },
-  "extends": "eslint:recommended",
-  "parserOptions": {
-    "ecmaFeatures": {
-      "experimentalObjectRestSpread": true,
-      "jsx": true
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true,
+        "commonjs": true
     },
-    "sourceType": "module"
-  },
-  "plugins": [
-    "react",
-    "react-hooks"
-  ],
-  "parser": "babel-eslint",
-  "rules": {
-    "indent": [
-      "error",
-      "tab",
-      {"SwitchCase": 1}
-    ],
-    "react/jsx-uses-react": "error",
-    "react/jsx-uses-vars": "error",
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
-    "no-console": "warn",
-    "no-await-in-loop": "warn"
-  }
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true,
+            "jsx": true
+        },
+        "sourceType": "module"
+    },
+    "plugins": ["react", "react-hooks"],
+    "parser": "babel-eslint",
+    "rules": {
+        "indent": ["error", 4, {"SwitchCase": 1}],
+        "react/jsx-uses-react": "error",
+        "react/jsx-uses-vars": "error",
+        "react-hooks/rules-of-hooks": "error",
+        "react-hooks/exhaustive-deps": "warn",
+        "no-console": "warn",
+        "no-await-in-loop": "warn",
+        "no-unused-vars": 1
+    }
 }
