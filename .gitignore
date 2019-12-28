@@ -6,3 +6,6 @@ res/js/*
 .idea/*
 diff.log
 BIM_GIS*
+.vscode/
+package-lock.json
+test.js
