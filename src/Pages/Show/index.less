@@ -52,12 +52,23 @@
     :global(.anticon) {
         margin-right: 5px;
         font-size: 16px;
+        color: #b81232;
+    }
+    :global(.anticon-double-left) svg {
+        &:hover {
+            transform: translateX(-2px);
+        }
+    }
+    :global(.anticon-double-right) svg {
+        &:hover {
+            transform: translateX(2px);
+        }
     }
 }
 
 .tipBody {
     display: flex;
-    color: #d9363e;
+    color: #616161;
     flex-direction: column;
     user-select: none;
     transition: opacity @func @delay;

@@ -479,16 +479,21 @@ const genLabel = content => {
 }
 
 const Tip = () => {
-    const [collapsed, setCollapse] = useState(false)
+    const [collapsed, setCollapse] = useState(true)
 
     const collapse = useCallback(() => {
         setCollapse(collapsed => !collapsed)
     }, [])
 
     return (
-        <div className={styles.tip} style={{right: collapsed ? -165 : 10}}>
+        <div
+            className={styles.tip}
+            style={{
+                right: collapsed ? -165 : 10,
+                marginRight: collapsed ? 10 : 0
+            }}>
             <Icon
-                type={collapsed ? 'left-circle' : 'right-circle'}
+                type={collapsed ? 'double-left' : 'double-right'}
                 onClick={collapse}
             />
             <div
