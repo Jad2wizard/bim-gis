@@ -58,7 +58,6 @@ export const defaultModelImg = '/img/timg.c98df3e.jpg'
 
 export const SENSOR_TYPE_LIST = [
     {
-        id: 'thermometer',
         name: '温度计',
         mesh: new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
@@ -66,7 +65,6 @@ export const SENSOR_TYPE_LIST = [
         )
     },
     {
-        id: 'hygrometer',
         name: '湿度计',
         mesh: new THREE.Mesh(
             new THREE.SphereGeometry(0.5, 32, 32),
@@ -75,7 +73,20 @@ export const SENSOR_TYPE_LIST = [
     }
 ]
 
+export const SENSOR_MENU_LIST = [
+    {
+        key: 'data-vis',
+        text: '数据曲线'
+    },
+    {
+        key: 'delete',
+        text: '删除'
+    }
+]
+
 export const URL_MAP = {
-    fetchDeviceCodesUrl:
-        'http://106.15.202.135:9001/api/project/deviceList?modelid='
+    fetchSensorDataUrl: (modelid = '123', pageSize = 100, deviceNumber) =>
+        `http://106.15.202.135:9001/api/sensor/data?modelid=${modelid}&pageSize=${pageSize}&number=${deviceNumber}`,
+    fetchDeviceCodesUrl: (modelid = '123') =>
+        `http://106.15.202.135:9001/api/project/deviceList?modelid=${modelid}`
 }

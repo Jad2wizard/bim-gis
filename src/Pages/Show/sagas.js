@@ -10,7 +10,7 @@ function* watchFetchDeviceCodes() {
             if (!modelId) throw new Error('modelId undefined')
             const res = yield call(
                 fetchProxy,
-                URL_MAP.fetchDeviceCodesUrl + '123'
+                URL_MAP.fetchDeviceCodesUrl('123')
             )
             yield put(
                 actions.fetchDeviceCodes('receive', {

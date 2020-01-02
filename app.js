@@ -70,7 +70,7 @@ app.use(
 app.use(koaStatic(path.join(__dirname, './res')))
 
 //添加鉴权认证中间件，位于静态路由后面，静态路由不用进行认证
-setSession(app)
+// setSession(app)
 
 app.use(routers.routes()).use(routers.allowedMethods())
 

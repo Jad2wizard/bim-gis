@@ -42,7 +42,7 @@ const Manage = React.memo(() => {
                 onClick={() => modelUploadVisibleChange(true)}>
                 添加模型
             </Button>
-            <Button type="primary">新增传感器</Button>
+            {/* <Button type="primary">新增传感器</Button> */}
             <div className={styles.modelList}>
                 {modelList.map(model => (
                     <ModelCard

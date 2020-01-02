@@ -5,7 +5,8 @@
 
 //header
 @headerWidth: calc(@homeWidth - @navWidth);
-@headerHeight: 50px;
+// @headerHeight: 50px;
+@headerHeight: 0px;
 @headerBgColor: #ffffff;
 
 //Navigator
@@ -14,33 +15,33 @@
 @navBgColor: #2e4052;
 
 //content
-@contentWidth: calc( @homeWidth - @navWidth );
-@contentHeight: calc( @homeHeight - @headerHeight );
+@contentWidth: calc(@homeWidth - @navWidth);
+@contentHeight: calc(@homeHeight - @headerHeight);
 
 //公用消除浮动
-.clearfloat{
-  &:after{
-    content:'';
-    display: block;
-    clear:both;
-  }
+.clearfloat {
+    &:after {
+        content: '';
+        display: block;
+        clear: both;
+    }
 }
 
-.scrollbar{
-  &::-webkit-scrollbar-track{
-    border-radius: 1px;
-    background-color: #f5f5f5;
-  }
-  &::-webkit-scrollbar{
-    width: 2px;
-    background-color: #f5f5f5;
-  }
-  &::-webkit-scrollbar-thumb{
-    border-radius: 1px;
-    background-color: #555;
-  }
+.scrollbar {
+    &::-webkit-scrollbar-track {
+        border-radius: 1px;
+        background-color: #f5f5f5;
+    }
+    &::-webkit-scrollbar {
+        width: 2px;
+        background-color: #f5f5f5;
+    }
+    &::-webkit-scrollbar-thumb {
+        border-radius: 1px;
+        background-color: #555;
+    }
 }
 
-body{
-  overflow: hidden;
+body {
+    overflow: hidden;
 }

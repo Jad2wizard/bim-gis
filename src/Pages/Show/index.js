@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback, useRef} from 'react'
+import React, {useEffect, useState, useCallback, useRef, useMemo} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
 import {message, Icon} from 'antd'
 import moment from 'moment'
@@ -15,7 +15,10 @@ import {
 } from 'three/examples/jsm/renderers/CSS2DRenderer'
 import {updateModel} from './../Manage/actions'
 import {fetchDeviceCodes} from './actions'
-import SensorUpload from './sensorUpload'
+import SensorUpload from './components/sensorUpload'
+import SensorHandleMenu from './components/SensorHandleMenu'
+import SensorDataVis from './components/SensorDataVis'
+import Tips from './components/Tips'
 import styles from './index.less'
 
 window.THREE = THREE
@@ -69,10 +72,13 @@ const Show = React.memo(() => {
     const [model, setModel] = useState(null)
     const [container, setContainer] = useState(null)
     const [sensorUploadVisible, setSensorUploadVisible] = useState(false)
+    const [sensorDataVisible, setSensorDataVisible] = useState(false)
+    const [sensorId, setSensorId] = useState(null)
 
     const modelId = location.search.split('id=')[1]
     const modelList = useSelector(state => state.manageState.modelList)
 
+    const clickPos = useRef({x: 0, y: 0})
     const intersectPoint = useRef(null)
     const renderer = useRef(null)
     const labelRendererRef = useRef(null)
@@ -339,6 +345,7 @@ const Show = React.memo(() => {
             )
             if (intersects.length > 0) {
                 return {
+                    position: {x, y},
                     intersectObj: intersects[0]
                 }
             }
@@ -348,35 +355,76 @@ const Show = React.memo(() => {
         [container]
     )
 
+    const handleClick = useCallback(e => {
+        if (
+            e.nativeEvent.path.find(
+                d => d.className && d.className.includes('ant-modal')
+            )
+        )
+            return
+        handleHideSensorMenu()
+    }, [])
+
     const handleRightClick = useCallback(
         e => {
-            const {intersectObj} = getIntersectObj(e)
+            const {intersectObj, position} = getIntersectObj(e)
+            clickPos.current = position
+
+            //右键点击的不是传感器，则弹出添加传感器的界面
             if (intersectObj && intersectObj.object.parent.name !== 'sensors') {
                 intersectPoint.current = intersectObj.point
                 setSensorUploadVisible(true)
+            }
+            //右键点击的是传感器，则弹出该传感器的操作栏
+            if (intersectObj && intersectObj.object.parent.name === 'sensors') {
+                const sensorId = intersectObj.object.name
+                if (sensorId) setSensorId(sensorId)
             }
         },
         [container]
     )
 
-    const handleDeleteSensor = useCallback(
-        e => {
-            const {intersectObj} = getIntersectObj(e)
-            if (intersectObj && intersectObj.object.parent.name === 'sensors') {
-                const {sensors} = model
-                const index = sensors.findIndex(
-                    s => s.id === intersectObj.object.name
-                )
-                sensors.splice(index, 1)
-                dispatch(
-                    updateModel('request', {
-                        params: {
-                            id: model.id,
-                            sensors
-                        }
-                    })
-                )
+    const handleSensorMenuEvent = useCallback(
+        action => {
+            switch (action) {
+                case 'delete': {
+                    handleDeleteSensor(sensorId)
+                    handleHideSensorMenu()
+                    break
+                }
+                case 'data-vis': {
+                    setSensorDataVisible(true)
+                    break
+                }
+                default:
+                    break
             }
+        },
+        [sensorId]
+    )
+
+    const handleHideSensorData = useCallback(() => {
+        setSensorId(null)
+        setSensorDataVisible(false)
+    }, [])
+
+    const handleHideSensorMenu = useCallback(() => {
+        setSensorId(null)
+    }, [])
+
+    const handleDeleteSensor = useCallback(
+        sensorId => {
+            const {sensors} = model
+            const index = sensors.findIndex(s => s.id === sensorId)
+            sensors.splice(index, 1)
+            dispatch(
+                updateModel('request', {
+                    params: {
+                        id: model.id,
+                        sensors
+                    }
+                })
+            )
         },
         [container, model]
     )
@@ -430,7 +478,7 @@ const Show = React.memo(() => {
         scene.current.add(sensorsGroup)
 
         for (let s of sensors) {
-            const sc = sensorTypes.find(sc => sc.id === s.type)
+            const sc = sensorTypes.find(sc => sc.name === s.type)
             if (sc) {
                 const tmpMesh = sc.mesh.clone()
                 const scale = radius.current / 150
@@ -443,27 +491,45 @@ const Show = React.memo(() => {
                 tmpMesh.scale.z = scale
                 tmpMesh.name = s.id
 
-                const label = genLabel(sc.name)
+                const label = genLabel(`${sc.name}: ${s.deviceCode}`)
                 tmpMesh.add(label)
                 sensorsGroup.add(tmpMesh)
             }
         }
     }, [])
 
+    const sensor = useMemo(() => {
+        if (!model || !sensorId) return null
+        const {sensors} = model
+        return sensors.find(s => s.id === sensorId)
+    }, [model, sensorId])
+
     return (
         <div
             ref={containerRef}
             className={styles.container}
-            onContextMenu={handleRightClick}
-            onClick={handleHiddenSensorUpload}
-            onDoubleClick={handleDeleteSensor}>
+            onClick={handleClick}
+            onContextMenu={handleRightClick}>
             {sensorUploadVisible && (
                 <SensorUpload
                     onSave={handleSensorAdd}
                     onCancel={handleHiddenSensorUpload}
                 />
             )}
-            <Tip />
+            {sensorId && (
+                <SensorHandleMenu
+                    top={clickPos.current.y}
+                    left={clickPos.current.x}
+                    onClick={handleSensorMenuEvent}
+                />
+            )}
+            {sensorDataVisible && (
+                <SensorDataVis
+                    sensor={sensor}
+                    onCancel={handleHideSensorData}
+                />
+            )}
+            <Tips />
         </div>
     )
 })
@@ -476,37 +542,6 @@ const genLabel = content => {
     const label = new CSS2DObject(labelDiv)
 
     return label
-}
-
-const Tip = () => {
-    const [collapsed, setCollapse] = useState(true)
-
-    const collapse = useCallback(() => {
-        setCollapse(collapsed => !collapsed)
-    }, [])
-
-    return (
-        <div
-            className={styles.tip}
-            style={{
-                right: collapsed ? -165 : 10,
-                marginRight: collapsed ? 10 : 0
-            }}>
-            <Icon
-                type={collapsed ? 'double-left' : 'double-right'}
-                onClick={collapse}
-            />
-            <div
-                className={styles.tipBody}
-                style={{opacity: collapsed ? 0 : 1}}>
-                <span>单击右键添加传感器</span>
-                <span>双击左键删除传感器</span>
-                <span>左键拖动旋转模型</span>
-                <span>左键+shift 拖动移动模型</span>
-                <span>鼠标滚轮缩放模型</span>
-            </div>
-        </div>
-    )
 }
 
 export default Show

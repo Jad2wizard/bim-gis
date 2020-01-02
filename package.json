@@ -32,6 +32,8 @@
         "babel-plugin-import": "^1.12.2",
         "core-js": "2.6.5",
         "css-loader": "^2.1.1",
+        "echarts": "^4.6.0",
+        "echarts-for-react": "^2.0.15-beta.1",
         "element-resize-event": "^3.0.3",
         "eslint": "^5.16.0",
         "eslint-plugin-react": "^7.12.4",

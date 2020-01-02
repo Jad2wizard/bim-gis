@@ -2,45 +2,33 @@ import React, {useCallback, useState, useEffect} from 'react'
 import {useDispatch, useSelector} from 'react-redux'
 import {Modal, Form, Select, Button} from 'antd'
 import styles from './sensorUpload.less'
+import PropTypes from 'prop-types'
 
 const Option = Select.Option
 
 const formItemLayout = {
     labelCol: {
         xs: {span: 24},
-        sm: {span: 5}
+        sm: {span: 8}
     },
     wrapperCol: {
         xs: {span: 24},
-        sm: {span: 19}
+        sm: {span: 16}
     }
 }
 
-const SensorUpload = props => {
-    const {getFieldDecorator, validateFields} = props.form
-    const dispatch = useDispatch()
+const SensorUpload = ({onSave, form}) => {
+    const {getFieldDecorator, validateFields} = form
     const deviceCodes = useSelector(state => state.modelState.deviceCodes)
     const sensorTypes = useSelector(state => state.modelState.sensorTypes)
-
-    const [type, setType] = useState('')
-    const [deviceCode, setDeviceCode] = useState('')
 
     const handleSubmit = useCallback(() => {
         validateFields((err, values) => {
             if (!err) {
-                console.log(values)
-                props.onSave(values)
+                onSave(values)
             }
         })
-    }, [dispatch])
-
-    const handleTypeChange = useCallback(type => {
-        setType(type)
-    }, [])
-
-    const handleDeviceCodeChange = useCallback(code => {
-        setDeviceCode(code)
-    }, [])
+    }, [onSave, validateFields])
 
     return (
         <Form {...formItemLayout}>
@@ -48,9 +36,9 @@ const SensorUpload = props => {
                 {getFieldDecorator('type', {
                     rules: [{required: true, message: '传感器类型不能为空'}]
                 })(
-                    <Select value={type} onChange={handleTypeChange}>
+                    <Select>
                         {sensorTypes.map(s => (
-                            <Option key={s.id} value={s.id}>
+                            <Option key={s.name} value={s.name}>
                                 {s.name}
                             </Option>
                         ))}
@@ -58,11 +46,10 @@ const SensorUpload = props => {
                 )}
             </Form.Item>
             <Form.Item key="deviceCode" label="设备编号">
-                {getFieldDecorator('deviceCode')(
-                    <Select
-                        showSearch
-                        value={deviceCode}
-                        onChange={handleDeviceCodeChange}>
+                {getFieldDecorator('deviceCode', {
+                    rules: [{required: true, message: '传感器类型不能为空'}]
+                })(
+                    <Select showSearch>
                         {deviceCodes.map(code => (
                             <Option key={code} value={code}>
                                 {code}
@@ -71,7 +58,7 @@ const SensorUpload = props => {
                     </Select>
                 )}
             </Form.Item>
-            <Form.Item key="submit" wrapperCol={{span: 19, offset: 5}}>
+            <Form.Item key="submit" wrapperCol={{span: 19, offset: 8}}>
                 <div
                     style={{
                         width: '100%',
@@ -88,9 +75,13 @@ const SensorUpload = props => {
     )
 }
 
+SensorUpload.propTypes = {
+    onSave: PropTypes.func.isRequired
+}
+
 const AddForm = Form.create({name: 'sensor_upload'})(SensorUpload)
 
-export default React.memo(({onCancel}) => {
+export default React.memo(({onSave, onCancel}) => {
     return (
         <Modal
             wrapClassName={styles.container}
@@ -100,7 +91,7 @@ export default React.memo(({onCancel}) => {
             footer={null}
             maskClosable={false}
             onCancel={onCancel}>
-            <AddForm />
+            <AddForm onSave={onSave} />
         </Modal>
     )
 })

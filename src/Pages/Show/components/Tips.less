@@ -1,0 +1,36 @@
+@delay: 0.5s;
+@func: ease-in;
+.tip {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 999;
+    background-color: #eeeeee00;
+    width: 180px;
+    display: flex;
+    align-items: center;
+    transition: right @func @delay;
+    :global(.anticon) {
+        margin-right: 5px;
+        font-size: 16px;
+        color: #b81232;
+    }
+    :global(.anticon-double-left) svg {
+        &:hover {
+            transform: translateX(-2px);
+        }
+    }
+    :global(.anticon-double-right) svg {
+        &:hover {
+            transform: translateX(2px);
+        }
+    }
+}
+
+.tipBody {
+    display: flex;
+    color: #616161;
+    flex-direction: column;
+    user-select: none;
+    transition: opacity @func @delay;
+}

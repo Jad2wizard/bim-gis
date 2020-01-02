@@ -15,7 +15,7 @@ const Home = React.memo(props => {
 
     return (
         <Layout className={styles.container}>
-            <Header className={styles.header} />
+            {/* <Header className={styles.header} /> */}
             <Navigator className={styles.nav} />
             <Layout.Content className={styles.content}>
                 {props.children}
