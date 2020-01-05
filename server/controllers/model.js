@@ -134,12 +134,14 @@ const updateModel = async ctx => {
         // const user = ctx.session.username
         const id = ctx.params.id
         const params = ctx.request.body
+        const files = ctx.request.files
+
         if (!id) throw new Error('模型 id 缺失')
-        const metadataFilePath = path.resolve(
-            modelTempStoreRoot,
-            id,
-            'metadata.json'
-        )
+
+        const modelPath = path.resolve(modelTempStoreRoot, id)
+
+        const metadataFilePath = path.resolve(modelPath, 'metadata.json')
+
         if (!fs.existsSync(metadataFilePath))
             throw new Error('模型的 metadata 数据不存在')
 
@@ -150,6 +152,26 @@ const updateModel = async ctx => {
         for (let key in params) {
             metadata[key] = params[key]
         }
+
+        //update files
+        for (let filename in files) {
+            const file = files[filename]
+
+            if (metadata[filename]) {
+                const filePath = path.resolve(
+                    global.resDir,
+                    '.' + metadata[filename]
+                )
+                rmdirSync(filePath)
+            }
+
+            const writeFilePath = path.resolve(modelPath, file.name)
+            const reader = fs.createReadStream(file.path)
+            const writer = fs.createWriteStream(writeFilePath)
+            reader.pipe(writer)
+            metadata[filename] = `/data/models/${id}/${file.name}`
+        }
+
         metadata.updateTime = moment().valueOf()
         fs.writeFileSync(metadataFilePath, JSON.stringify(metadata))
 

@@ -9,3 +9,5 @@ BIM_GIS*
 .vscode/
 package-lock.json
 test.js
+*.zip
+测试文件

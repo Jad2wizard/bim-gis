@@ -19,6 +19,7 @@ process.on('uncaughtException', err => {
 
 const app = new Koa()
 const NODE_ENV = process.env.NODE_ENV
+global.resDir = path.resolve(__dirname, './res') //执行 app.js 时
 
 app.use(cors())
 

@@ -14,7 +14,7 @@ module.exports = (env, argv) => {
                 ? [
                       'eventsource-polyfill',
                       `webpack-hot-middleware/client?path=http://127.0.0.1:${port}/__webpack_hmr&timeout=20000`,
-                      './demo.js'
+                      './src/index.js'
                   ]
                 : ['./src/index.js']
         },

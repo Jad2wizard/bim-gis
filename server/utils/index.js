@@ -5,6 +5,8 @@ const delay = (duration = 1000) =>
     new Promise(resolve => setTimeout(resolve, duration))
 
 const rmdirSync = dir => {
+    if (!fs.existsSync(dir)) return
+
     const fileinfo = fs.statSync(dir)
     if (fileinfo.isFile()) {
         fs.unlinkSync(dir)

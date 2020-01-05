@@ -54,8 +54,8 @@ function* updateModel(params) {
     try {
         const res = yield fetchProxy('/model/' + params.id, {
             method: 'PUT',
-            payload: params,
-            contentType: 'application/json'
+            payload: params
+            // contentType: 'application/json'
         })
         if (res) {
             yield put(actions.updateModel('receive', {params}))
