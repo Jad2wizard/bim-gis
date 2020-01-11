@@ -8,7 +8,7 @@ import {syncHistoryWithStore} from 'react-router-redux'
 import {Provider} from 'react-redux'
 import Home from './Pages/Home'
 import Manage from './Pages/Manage'
-import Show from './Pages/Show'
+import ModelDetail from './Pages/ModelDetail'
 import GIS from './Pages/GIS'
 import Login from './Pages/Session/Login'
 import Register from './Pages/Session/Register'
@@ -30,7 +30,7 @@ const routes = (
         <Route path="/register" component={() => <Register />} />
         <Route path="/" component={props => <Home {...props} />}>
             <Route path="/manage" component={() => <Manage />} />
-            <Route path="/show" component={() => <Show />} />
+            <Route path="/modelDetail" component={() => <ModelDetail />} />
             <Route path="/map" component={() => <GIS />} />
             <Route path="/help" component={() => <div>帮助</div>} />
             <Route path="/404" component={() => <NotFoundPage />} />

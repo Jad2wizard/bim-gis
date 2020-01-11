@@ -30,7 +30,9 @@ const GIS = React.memo(() => {
             map.addEventListener('mouseup', e => {
                 e.domEvent.stopPropagation()
                 if (e.overlay && e.overlay.id)
-                    dispatch(routerActions.push(`/show?id=${e.overlay.id}`))
+                    dispatch(
+                        routerActions.push(`/modelDetail?id=${e.overlay.id}`)
+                    )
             })
 
             mapRef.current = map

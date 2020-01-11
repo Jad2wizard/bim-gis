@@ -13,7 +13,7 @@ const NAV_LIST = [
         icon: 'home'
     },
     {
-        key: '/show',
+        key: '/modelDetail',
         text: '模型展示',
         icon: 'read'
     },

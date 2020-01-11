@@ -6,6 +6,7 @@
     "scripts": {
         "start": "npm run build:dllDev && node app.js",
         "start:prod": "cross-env NODE_ENV=production node app.js",
+        "build": "webpack --mode development",
         "build:dev": "npm run build:dllDev && webpack --mode development",
         "build:prod": "npm run build:dllProd && webpack --mode production",
         "build:dllProd": "webpack --config webpack.config.dll.js --mode production",

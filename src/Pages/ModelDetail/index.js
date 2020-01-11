@@ -20,6 +20,7 @@ import SensorHandleMenu from './components/SensorHandleMenu'
 import SensorDataVis from './components/SensorDataVis'
 import Tips from './components/Tips'
 import styles from './index.less'
+import { Model } from 'echarts/lib/export'
 
 window.THREE = THREE
 const ObjLoader = new OBJLoader()
@@ -66,7 +67,7 @@ const loadFbx = url =>
         )
     })
 
-const Show = React.memo(() => {
+const ModelDetail = React.memo(() => {
     const dispatch = useDispatch()
 
     const [model, setModel] = useState(null)
@@ -544,4 +545,4 @@ const genLabel = content => {
     return label
 }
 
-export default Show
+export default ModelDetail

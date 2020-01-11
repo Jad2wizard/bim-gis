@@ -23,7 +23,7 @@ const Manage = React.memo(() => {
 
     const handleClickModel = useCallback(
         modelId => {
-            dispatch(routerActions.push(`/show?id=${modelId}`))
+            dispatch(routerActions.push(`/modelDetail?id=${modelId}`))
         },
         [dispatch]
     )
