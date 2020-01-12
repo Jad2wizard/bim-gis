@@ -2,9 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const moment = require('moment')
 const unzip = require('unzip')
-const {rmdirSync} = require('../utils')
-
-const modelTempStoreRoot = path.resolve(__dirname, './../../res/data/models')
+const {rmdirSync, modelTempStoreRoot} = require('../utils')
 
 const dumpModelData = (modelPath, id) => {
     const res = {}
@@ -185,55 +183,9 @@ const updateModel = async ctx => {
     }
 }
 
-const getSensor = async ctx => {
-    try {
-        const {modelId, sensorId} = ctx.params
-        if (!modelId) throw '缺少标记所属的模型id'
-    } catch (e) {
-        ctx.response.body = {message: e.toString()}
-        ctx.status = 400
-    }
-}
-
-const addSensor = async ctx => {
-    try {
-        const {modelId} = ctx.params
-        if (!modelId) throw '缺少标记所属的模型id'
-    } catch (e) {
-        ctx.response.body = {message: e.toString()}
-        ctx.status = 400
-    }
-}
-
-const delSensor = async ctx => {
-    try {
-        const {modelId, sensorId} = ctx.params
-        if (!modelId) throw '缺少标记所属的模型id'
-        if (!sensorId) throw '缺少标记id'
-    } catch (e) {
-        ctx.response.body = {message: e.toString()}
-        ctx.status = 400
-    }
-}
-
-const updateSensor = async ctx => {
-    try {
-        const {modelId, sensorId} = ctx.params
-        if (!modelId) throw '缺少标记所属的模型id'
-        if (!sensorId) throw '缺少标记id'
-    } catch (e) {
-        ctx.response.body = {message: e.toString()}
-        ctx.status = 400
-    }
-}
-
 module.exports = {
     getModel,
     addModel,
     delModel,
     updateModel,
-    getSensor,
-    addSensor,
-    delSensor,
-    updateSensor
 }

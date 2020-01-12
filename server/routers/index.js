@@ -3,13 +3,16 @@ const {
     getModel,
     addModel,
     delModel,
-    updateModel,
-    getSensor,
-    addSensor,
-    delSensor,
-    updateSensor
+    updateModel
 } = require('./../controllers/model')
-const {addSensorType, getSensorTypes} = require('./../controllers/sensor')
+const {
+    addSensorType,
+    getAllSensorTypes,
+    addsensor,
+    updateSensor,
+    delSensor,
+    getSensors
+} = require('./../controllers/sensor')
 const {login, logout, register} = require('./../controllers/session')
 
 routers.post('/model', addModel)
@@ -18,17 +21,15 @@ routers.put('/model/:id', updateModel)
 routers.get('/model/:id', getModel)
 routers.get('/model', getModel)
 
-routers.get('/model/:modelId/sensor', getSensor)
-routers.get('/model/:modelId/sensor/:sensorId', getSensor)
-routers.post('/model/:modelId/sensor', addSensor)
-routers.put('/model/:modelId/sensor/:sensorId', updateSensor)
-routers.delete('/model/:modelId/sensor/:sensorId', delSensor)
-
 routers.post('/login', login)
 routers.post('/register', register)
 routers.get('/logout', logout)
 
 routers.post('/gis/sensor/addSensorType', addSensorType)
-routers.post('/gis/sensor/getAllSensorTypes', getSensorTypes)
+routers.post('/gis/sensor/getAllSensorTypes', getAllSensorTypes)
+routers.post('/gis/sensor/addsensor', addsensor)
+routers.post('/gis/sensor/updateSensor', updateSensor)
+routers.post('/gis/sensor/delSensor', delSensor)
+routers.post('/gis/sensor/Sensors', getSensors)
 
 module.exports = routers

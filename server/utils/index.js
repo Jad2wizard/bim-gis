@@ -18,7 +18,20 @@ const rmdirSync = dir => {
     }
 }
 
+const dataRoot = path.resolve(__dirname, './../../res/data')
+
+const modelTempStoreRoot = path.resolve(dataRoot, './models')
+
+const sensorTypeStoreRoot = path.resolve(dataRoot, './sensorTypes')
+
+const sensorsPath = path.resolve(dataRoot, './sensors.json')
+if (!fs.existsSync(sensorsPath))
+    fs.writeFileSync(sensorsPath, JSON.stringify({}))
+
 module.exports = {
     delay,
-    rmdirSync
+    rmdirSync,
+    sensorsPath,
+    modelTempStoreRoot,
+    sensorTypeStoreRoot
 }
